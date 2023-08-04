@@ -1,5 +1,5 @@
 <script>
-    import { LucideX } from "lucide-svelte";
+    import IconCross from '~icons/system-uicons/cross';
 
     export let open = false;
 
@@ -11,7 +11,9 @@
 <dialog bind:this={ modal } on:close={ () => open = false } on:cancel={ () => open = false }>
     <div class="back" on:click={ () => modal.close() }></div>
     <div class="main">
-        <button class="close" on:click={ () => modal.close() }><LucideX size="100%" absoluteStrokeWidth={ true } /></button>
+        <button class="close" on:click={ () => modal.close() }>
+            <IconCross width="100%" height="100%" />
+        </button>
         <slot />
         <button class="ok" on:click={ () => modal.close() }>OK</button>
     </div>

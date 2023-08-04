@@ -1,6 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import { LucideDelete, LucideTrash2 } from "lucide-svelte";
+    import IconBackspace from '~icons/system-uicons/backspace';
+    import IconTrash from '~icons/system-uicons/trash';
 
     import dictionary from '$lib/js/dictionary.js';
 
@@ -16,10 +17,10 @@
         { displayWord || '\u00a0' }
     </div>
     <button type="button" class="backspace" disabled={ !word.length } on:click={ () => dispatch('backspace') }>
-        <LucideDelete strokeWidth={ 1 } size="100%" />
+        <IconBackspace width="100" height="100%" />
     </button>
     <button type="button" class="clear" disabled={ !word.length } on:click={ () => dispatch('clear') }>
-        <LucideTrash2 strokeWidth={ 1 } size="100%" />
+        <IconTrash width="100" height="100%" />
     </button>
 </div>
 

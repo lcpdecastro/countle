@@ -71,6 +71,11 @@
         
         if (letters.length < 9) return;
 
+        if (control) socketSend('sync-letters', {
+            consonants: $consonants,
+            vowels: $vowels
+        });
+
         started = true;
         dispatch('starttimer');
 
@@ -101,6 +106,11 @@
         word = [];
     }
 
+    function syncLetters (x) {
+        $consonants = x.consonants;
+        $vowels = x.vowels;
+    }
+
     // ==========#==========#==========#========== //
 
     let worker;
@@ -111,6 +121,7 @@
 
     if (!solo) {
         socketListen('pass-letter', x => getLetter(x));
+        socketListen('sync-letters', x => syncLetters(x));
     } else {
         socketClose();
     }

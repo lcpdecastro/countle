@@ -90,6 +90,13 @@
     // ==========#==========#==========#========== //
 
     $: currentGame = $gameState?.games[$gameState.round - 1] ?? null;
+
+    $: {
+        void $soloState;
+        timerComponent?.reset();
+        if ($soloState === 'l') resetLetters();
+    }
+
     $: entered = !!players?.find(x => x.username === username);
     $: started = !!$gameState?.round;
     $: $totalScore = scores?.[username].reduce((p, c) => p + c, 0) || $totalScore;

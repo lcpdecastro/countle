@@ -192,6 +192,12 @@ function nextRound () {
     players.forEach(p => socketSend(p.socket, 'next-round', state));
 }
 
+function syncLetters (socket, data) {
+    players.forEach(p => {
+        if (p.socket !== socket) socketSend(p.socket, 'sync-letters', data);
+    });
+}
+
 // Event handler
 
 function handleMessages (socket, message) {
@@ -215,6 +221,9 @@ function handleMessages (socket, message) {
             break;
         case 'next-round-ready':
             nextRoundReady(socket);
+            break;
+        case 'sync-letters':
+            syncLetters(socket, data);
             break;
     }
 }

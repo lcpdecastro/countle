@@ -52,7 +52,7 @@ function* numbersHelper (numbers) {
                 yield r;
                 yield* numbersHelper(r);
             }
-            if (a > b) {
+            if (a > b && a !== b * 2) {
                 const fas = isFlattenable(as, '-') ? as : [as];
                 
                 const steps = [...(['+', ...fas].reduce((p, c, i, a) => (i % 2) ? p : p.concat([[c, a[i + 1]]]), [])), ['-', bs]];
@@ -66,7 +66,7 @@ function* numbersHelper (numbers) {
                 yield r;
                 yield* numbersHelper(r);
             }
-            if (i < j) {
+            if (i < j && a !== 1 && b !== 1) {
                 const [fas, fbs] = [isFlattenable(as, '*') ? as : [as], isFlattenable(bs, '*') ? bs : [bs]];
                 
                 const steps = [...(['*', ...fas].reduce((p, c, i, a) => (i % 2) ? p : p.concat([[c, a[i + 1]]]), [])), ...(['*', ...fbs].reduce((p, c, i, a) => (i % 2) ? p : p.concat([[c, a[i + 1]]]), []))];
@@ -80,7 +80,7 @@ function* numbersHelper (numbers) {
                 yield r;
                 yield* numbersHelper(r);
             }
-            if (!(a % b)) {
+            if (!(a % b) && b !== 1 && a !== b ** 2) {
                 const fas = isFlattenable(as, '/') ? as : [as];
                 
                 const steps = [...(['*', ...fas].reduce((p, c, i, a) => (i % 2) ? p : p.concat([[c, a[i + 1]]]), [])), ['/', bs]];

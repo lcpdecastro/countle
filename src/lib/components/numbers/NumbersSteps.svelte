@@ -1,6 +1,6 @@
 <script>
     import { createEventDispatcher, onMount } from "svelte";
-    import { LucideXCircle } from "lucide-svelte";
+    import IconCross from '~icons/system-uicons/cross-circle';
 
     import { halfFlipTransition } from "$lib/js/flipTransition.js";
 
@@ -66,7 +66,7 @@
                 />
 
                 <button class="remove" on:click={ () => dispatch('removestep', i) }>
-                    <LucideXCircle strokeWidth=1 absoluteStrokeWidth={ true } color="var(--red)" size="1.5rem" />
+                    <IconCross color="var(--red)" width="100%" height="100%" />
                 </button>
             </div>
         { /each }

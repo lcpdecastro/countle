@@ -16,7 +16,6 @@
         return -o;
     }
 
-    $: console.log(Object.entries(scores).map(x => [x[0], x[1].reduce((p, c) => p + c, 0)]).reduce((p, c) => c[1] > p[1] ? c : p)[0] === username);
     $: if (lastRound && Object.entries(scores).map(x => [x[0], x[1].reduce((p, c) => p + c, 0)]).reduce((p, c) => c[1] > p[1] ? c : p)[0] === username) {
         confetti();
     }

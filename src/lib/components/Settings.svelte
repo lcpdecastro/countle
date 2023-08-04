@@ -1,5 +1,5 @@
 <script>
-    import { LucideSettings } from 'lucide-svelte';
+    import IconSettings from '~icons/system-uicons/settings';
     
     import settings from '$lib/js/settings.js';
 
@@ -9,7 +9,7 @@
 </script>
 
 <button on:click={ () => settingsOpen = true }>
-    <LucideSettings strokeWidth={ 1 } size="100%" />
+    <IconSettings width="100%" height="100%" />
 </button>
 
 <Modal bind:open={ settingsOpen }>
