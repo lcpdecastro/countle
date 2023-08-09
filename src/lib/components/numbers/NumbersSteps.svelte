@@ -1,8 +1,8 @@
 <script>
-    import { createEventDispatcher, onMount } from "svelte";
-    import IconCross from '~icons/system-uicons/cross-circle';
+    import { createEventDispatcher } from "svelte";
+    import IconCross from 'phosphor-svelte/lib/XCircle';
 
-    import { halfFlipTransition } from "$lib/js/flipTransition.js";
+    import flipTransition from "$lib/js/flipTransition.js";
 
     import Square from "$lib/components/Square.svelte";
     import NumbersOperations from "$lib/components/numbers/NumbersOperations.svelte";
@@ -17,11 +17,7 @@
     export let solved = false;
     export let timerDone;
 
-    let mounted;
-
     $: solved = steps.at(-1)?.r?.value === target;
-
-    onMount(() => mounted = true);
 </script>
 
 <div class="wrapper">
@@ -31,7 +27,7 @@
             { @const b = step.b }
             { @const r = step.r }
 
-            <div class="step" in:halfFlipTransition out:halfFlipTransition>
+            <div class="step" in:flipTransition out:flipTransition>
                 <Square
                     value={ a?.value || null }
                     valid={ a?.valid }
@@ -66,13 +62,13 @@
                 />
 
                 <button class="remove" on:click={ () => dispatch('removestep', i) }>
-                    <IconCross color="var(--red)" width="100%" height="100%" />
+                    <IconCross size="100%" color="var(--red)" />
                 </button>
             </div>
         { /each }
     </div>
 
-    { #if mounted && !alt }
+    { #if !alt }
         <NumbersOperationsPanel
             disabled={ solved || timerDone || steps.length === 0 || steps?.[4]?.r || (steps.at(-1)?.o && !steps.at(-1).r) }
             operands={ Object.values(steps.at(-1) ?? { '_': false }).every(x => x) ? [steps.at(-1)?.r?.value, null] : [steps.at(-1)?.a?.value, steps.at(-1)?.b?.value] }
@@ -107,6 +103,9 @@
         color: var(--theme-color);
         font-weight: bold;
         font-size: 2rem;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        filter: grayscale(0);
     }
 
     .step > span {

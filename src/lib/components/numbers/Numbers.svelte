@@ -1,18 +1,16 @@
 <script>
-    import { createEventDispatcher, onMount } from 'svelte';
+    import { createEventDispatcher, getContext, onMount } from 'svelte';
 
     import shuffleList from 'shuffle-list';
 
     import settings from '$lib/js/settings.js';
-    import { flipTransition } from '$lib/js/flipTransition.js';
-    import { socketSend, socketListen, socketClose } from '$lib/js/socket.js';
+    import flipTransition from '$lib/js/flipTransition.js';
     import { stringifySteps } from '$lib/js/solvers.js';
+    import { getDaily } from '$lib/js/daily.js';
 
     import NumbersTarget from '$lib/components/numbers/NumbersTarget.svelte';
     import NumbersSquares from '$lib/components/numbers/NumbersSquares.svelte';
     import NumbersSteps from '$lib/components/numbers/NumbersSteps.svelte';
-
-    import solveWorker from '$lib/js/worker.js?worker';
 
     const dispatch = createEventDispatcher();
 
@@ -29,9 +27,11 @@
     let solved;
 
     // ==========#==========#==========#========== //
+
+    const daily = getContext('daily');
+
+    // ==========#==========#==========#========== //
     
-    export let solo;
-    export let control;
     export let timerDone;
 
     export function reset () {
@@ -49,48 +49,46 @@
         dispatch('resettimer');
     }
 
-    export function getScore () {
-        let v = Math.abs(steps.reduce((p, c) => c.r ? c.r.value : p, undefined) - target);
-        return Number.isNaN(v) ? null : v;
+    export function getDailyTrial () {
+        let cc = numbers.concat(steps.map(s => s.r));
+
+        return {
+            numbers: {
+                input: steps.map(s => [cc.indexOf(s.a), s.o, cc.indexOf(s.b)]),
+                results
+            }
+        };
     }
 
     // ==========#==========#==========#========== //
 
     function generateNumber (isLarge = false) {
-        let n;
+        let value;
 
         if (isLarge) {
-            n = largeNumbers.pop();
+            value = largeNumbers.pop();
             largeNumbers = largeNumbers;
         } else {
-            n = smallNumbers.pop();
+            value = smallNumbers.pop();
             smallNumbers = smallNumbers;
         }
 
-        if (!solo) socketSend('generate-number', n);
-
-        getNumber(n);
-    }
-
-    function getNumber (value) {
         numbers = numbers.concat({ value, selected: false, valid: true });
     }
 
     function generateTarget () {
-        let t = Math.floor(Math.random() * 899) + 101;
-
-        if (!solo) socketSend('generate-target', t);
-
-        getTarget(t);
-    }
-
-    function getTarget (value) {
-        target = value;
+        target = Math.floor(Math.random() * 899) + 101;
 
         started = true;
         dispatch('starttimer');
 
-        worker.postMessage( { numbers: numbers.map(x => x.value), target });
+        worker?.postMessage({ numbers: numbers.map(x => x.value), target });
+    }
+
+    function generateDaily () {
+        const c = Math.floor(Math.random() * 5);
+        shuffleList(Array(6).fill(true, 0, c).fill(false, c)).forEach(x => generateNumber(x));
+        generateTarget();
     }
 
     function selectSquare (n) {
@@ -248,18 +246,40 @@
     }
 
     // ==========#==========#==========#========== //
-
-    if (!solo) {
-        socketListen('pass-number', x => getNumber(x));
-        socketListen('pass-target', x => getTarget(x));
-    } else {
-        socketClose();
-    }
-
-    // ==========#==========#==========#========== //
     
     onMount(() => {
-        worker = new solveWorker();
+        const d = getDaily('numbers');
+
+        if (daily && d) {
+            generateDaily();
+
+            for (let x of d.input) {
+                steps = steps.concat({
+                    a: numbers[x[0]] ?? steps[x[0] - 6].r ?? null,
+                    o: x[1],
+                    b: numbers[x[2]] ?? steps[x[2] - 6].r ?? null
+                });
+
+                const a = steps.at(-1).a.value;
+                const o = steps.at(-1).o;
+                const b = steps.at(-1).b.value;
+
+                steps.at(-1).r = {
+                    value: o === '\u002b' ? a + b : o === '\u2212' ? a - b : o === '\u00d7' ? a * b : o === '\u00f7' ? a / b : null,
+                    selected: false
+                };
+
+                steps.at(-1).a.selected = true;
+                steps.at(-1).b.selected = true;
+            }
+
+            results = d.results;
+            dispatch('draintimer');
+
+            return;
+        }
+
+        worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
         worker.addEventListener('message', e => results = e.data);
     });
 </script>
@@ -289,7 +309,10 @@
             else if (lastStep.o) removeOperation(steps.length - 1);
             else if (lastStep.a) deselectSquare(lastStep.a);
         }
-        if (k === 'delete' && steps.length > 0) removeStep(steps.length - 1);
+        if (k === 'delete' && steps.length > 0) {
+            if (e.shiftKey) removeStep(0);
+            else removeStep(steps.length - 1);
+        }
     } }
 />
 
@@ -311,25 +334,25 @@
     </div>
 
     <span class="buttons">
-        { #if !started && control && numbers.length < 6 }
+        { #if !started && !daily && numbers.length < 6 }
             <span in:flipTransition out:flipTransition>
                 <button on:click={ () => generateNumber(false) }>SMALL</button>
                 <button on:click={ () => generateNumber(true) } disabled={ !largeNumbers.length }>LARGE</button>
             </span>
-        { :else if !started && control && !target }
+        { :else if !started && !daily && !target }
             <span in:flipTransition out:flipTransition>
                 <button on:click={ generateTarget }>GET TARGET</button>
             </span>
+        { :else if !started && daily }
+            <span in:flipTransition out:flipTransition>
+                <button on:click={ generateDaily }>SHOW TODAY&CloseCurlyQuote;S NUMBERS</button>
+            </span>
         { :else if timerDone }
             <span in:flipTransition out:flipTransition>
-                { #if results }
-                    <button on:click={ getSampleSolution }>SHOW A SOLUTION</button>
-                { /if }
+                <button on:click={ getSampleSolution } disabled={ !results }>{ results ? 'SHOW A SOLUTION' : 'SOLVING\u2026' }</button>
                 
-                { #if solo }
-                    <button on:click={ () => dispatch('soloreset') }>RESET</button>
-                { :else }
-                    <button on:click={ () => dispatch('showscoreboard') }>SCOREBOARD</button>
+                { #if !daily }
+                    <button on:click={ () => dispatch('gamereset') }>RESET</button>
                 { /if }
             </span>
         { /if }
@@ -376,6 +399,7 @@
         grid-area: 1 / 1 / 2 / 2;
         display: flex;
         gap: 0.5rem;
+        -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
     }
 
@@ -385,16 +409,22 @@
         border-radius: 0.75rem;
         color: var(--theme-color);
         font-weight: bold;
-        transition-property: background, color, filter, opacity;
+        transition-property: background, color, filter, opacity, border;
         transition-duration: 0.15s;
     }
     
-    .buttons button:hover, .buttons button:focus {
+    @media (hover: hover) {
+        .buttons button:hover {
+            border: 1px solid var(--theme-color);
+            background: var(--theme-color);
+            color: white;
+        }
+    }
+    
+    .buttons button:focus {
+        border: 1px solid var(--theme-color);
         background: var(--theme-color);
         color: white;
-    }
-
-    .buttons button:focus {
         outline: 1px solid var(--theme-color);
         outline-offset: 0.125rem;
     }

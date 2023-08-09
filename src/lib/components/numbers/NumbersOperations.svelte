@@ -95,18 +95,20 @@
         font-weight: bold;
         color: var(--theme-color);
         overflow: hidden;
-        transition-property: background, color, filter, opacity;
+        transition-property: background, color, filter, opacity, border;
         transition-duration: 0.15s;
     }
 
     @media (hover: hover) {
         button:hover {
+            border: 1px solid var(--theme-color);
             background: var(--theme-color);
             color: white;
         }
     }
     
     button:focus {
+        border: 1px solid var(--theme-color);
         outline: none;
         background: var(--theme-color);
         color: white;

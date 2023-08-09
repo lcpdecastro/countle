@@ -1,19 +1,19 @@
 <script>
-    import { createEventDispatcher, onMount } from 'svelte';
+    import { createEventDispatcher, getContext, onMount } from 'svelte';
+    import shuffleList from 'shuffle-list';
 
     import LettersSquares from '$lib/components/letters/LettersSquares.svelte';
     import LettersInput from '$lib/components/letters/LettersInput.svelte';
 
-    import dictionary from '$lib/js/dictionary.js';
-    import { vowels, consonants } from '$lib/js/stores.js';
-    import { flipTransition } from '$lib/js/flipTransition.js';
-    import { socketSend, socketListen, socketClose } from '$lib/js/socket.js';
-
-    import solveWorker from '$lib/js/worker.js?worker';
+    import flipTransition from '$lib/js/flipTransition.js';
+    import { getDaily } from '$lib/js/daily.js';
 
     const dispatch = createEventDispatcher();
 
     // ==========#==========#==========#========== //
+
+    let vowels = shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split(''));
+    let consonants = shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split(''));
     
     let letters = [];
     let word = [];
@@ -23,12 +23,17 @@
     let consonantSel = 0;
     
     // ==========#==========#==========#========== //
+
+    const daily = getContext('daily');
     
-    export let solo;
-    export let control;
+    // ==========#==========#==========#========== //
+
     export let timerDone;
     
     export function reset () {
+        vowels = shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split(''));
+        consonants = shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split(''));
+
         letters = [];
         word = [];
         started = false;
@@ -42,44 +47,43 @@
         dispatch('resettimer');
     }
 
-    export function getScore () {
-        return dictionary.has(word.map(x => x.value).join('').toLowerCase()) ? word.length === 9 ? 18 : word.length : 0;
+    export function getDailyTrial () {
+        return {
+            letters: {
+                input: word.map(x => letters.indexOf(x)),
+                results
+            }
+        };
     }
 
     // ==========#==========#==========#========== //
 
     function generateLetter (isVowel = false) {
-        let x;
+        let value;
 
         if (isVowel) {
-            x = $vowels.pop();
-            $vowels = $vowels;
+            value = vowels.pop();
+            vowels = vowels;
             vowelSel++;
         } else {
-            x = $consonants.pop();
-            $consonants = $consonants;
+            value = consonants.pop();
+            consonants = consonants;
             consonantSel++;
         }
 
-        if (!solo) socketSend('generate-letter', x);
-
-        getLetter(x);
-    }
-
-    function getLetter (value) {
         letters = letters.concat({ value, selected: false });
         
         if (letters.length < 9) return;
 
-        if (control) socketSend('sync-letters', {
-            consonants: $consonants,
-            vowels: $vowels
-        });
-
         started = true;
         dispatch('starttimer');
 
-        worker.postMessage({ letters: letters.map(x => x.value) });
+        worker?.postMessage({ letters: letters.map(x => x.value) });
+    }
+
+    function generateDaily () {
+        const c = Math.floor(Math.random() * 2) + 4;
+        shuffleList(Array(9).fill(false, 0, c).fill(true, c)).forEach(x => generateLetter(x));
     }
 
     function selectSquare (n) {
@@ -106,11 +110,6 @@
         word = [];
     }
 
-    function syncLetters (x) {
-        $consonants = x.consonants;
-        $vowels = x.vowels;
-    }
-
     // ==========#==========#==========#========== //
 
     let worker;
@@ -118,18 +117,23 @@
     let showLongest = false;
 
     // ==========#==========#==========#========== //
-
-    if (!solo) {
-        socketListen('pass-letter', x => getLetter(x));
-        socketListen('sync-letters', x => syncLetters(x));
-    } else {
-        socketClose();
-    }
-
-    // ==========#==========#==========#========== //
     
     onMount(() => {
-        worker = new solveWorker();
+        const d = getDaily('letters');
+
+        if (daily && d) {
+            generateDaily();
+
+            word = d.input.map(x => letters[x]);
+            d.input.forEach(x => letters[x].selected = true);
+
+            results = d.results;
+            dispatch('draintimer');
+
+            return;
+        }
+
+        worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
         worker.addEventListener('message', e => results = e.data);
     });
 </script>
@@ -162,21 +166,21 @@
     </div>
 
     <span class="buttons">
-        { #if !started && control && letters.length < 9 }
+        { #if !started && !daily && letters.length < 9 }
             <span in:flipTransition out:flipTransition>
                 <button on:click={ () => generateLetter(false) } disabled={ consonantSel === 6 }>CONSONANT</button>
                 <button on:click={ () => generateLetter(true) } disabled={ vowelSel === 5 }>VOWEL</button>
             </span>
+        { :else if !started && daily }
+            <span in:flipTransition out:flipTransition>
+                <button on:click={ generateDaily }>SHOW TODAY&CloseCurlyQuote;S LETTERS</button>
+            </span>
         { :else if timerDone }
             <span in:flipTransition out:flipTransition>
-                { #if results }
-                    <button on:click={ () => showLongest = true }>SHOW LONGEST WORDS</button>
-                { /if }
+                <button on:click={ () => showLongest = true } disabled={ !results }>{ results ? 'SHOW LONGEST WORDS' : 'SOLVING\u2026' }</button>
                 
-                { #if solo }
-                    <button on:click={ () => dispatch('soloreset') }>RESET</button>
-                { :else }
-                    <button on:click={ () => dispatch('showscoreboard') }>SCOREBOARD</button>
+                { #if !daily }
+                    <button on:click={ () => dispatch('gamereset') }>RESET</button>
                 { /if }
             </span>
         { /if }
@@ -221,6 +225,7 @@
         grid-area: 1 / 1 / 2 / 2;
         display: flex;
         gap: 0.5rem;
+        -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
     }
 
@@ -230,16 +235,22 @@
         border-radius: 0.75rem;
         color: var(--theme-color);
         font-weight: bold;
-        transition-property: background, color, filter, opacity;
+        transition-property: background, color, filter, opacity, border;
         transition-duration: 0.15s;
     }
+
+    @media (hover: hover) {
+        .buttons button:hover {
+            border: 1px solid var(--theme-color);
+            background: var(--theme-color);
+            color: white;
+        }
+    }
     
-    .buttons button:hover, .buttons button:focus {
+    .buttons button:focus {
+        border: 1px solid var(--theme-color);
         background: var(--theme-color);
         color: white;
-    }
-
-    .buttons button:focus {
         outline: 1px solid var(--theme-color);
         outline-offset: 0.125rem;
     }

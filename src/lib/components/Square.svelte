@@ -3,7 +3,7 @@
 
     import settings from '$lib/js/settings.js';
     import cssEase from '$lib/js/cssEase.js';
-    import { flipTransition as flip } from '$lib/js/flipTransition.js';
+    import flip from '$lib/js/flipTransition.js';
 
     export let value = null;
     export let disabled = false;
@@ -12,14 +12,6 @@
 
     let oldValue;
     let displayOldValue;
-    
-    function flipBack (node, { duration = 300, easing = cssEase } = {}) {
-        return {
-            duration,
-            easing,
-            css: (t, u) => `transform: rotateX(${180 * t}deg)`
-        }
-    }
 
     $: reducedMotion = $settings['reducedMotion'];
     $: invalidClass = value && !valid;
@@ -44,7 +36,7 @@
         </div>
     { :else }
         { #key value }
-            <div style:--font-scale={ Math.min(1, 2 / ((1.5 + `${displayOldValue ?? ''}`.length) / 2)) } class="back" in:flipBack style:transform="rotateX(180deg)">{ displayOldValue ?? '' }</div>
+            <div style:--font-scale={ Math.min(1, 2 / ((1.5 + `${displayOldValue ?? ''}`.length) / 2)) } class="back" in:flip={ { from: 0, to: 180 } }>{ displayOldValue ?? '' }</div>
             <div style:--font-scale={ Math.min(1, 2 / ((1.5 + `${value ?? ''}`.length) / 2)) } class="main" in:flip>{ value ?? '' }</div>
         { /key }
     { /if }
@@ -73,7 +65,7 @@
     }
 
     button.invalid {
-        opacity: 0.5;
+        opacity: 0.25;
     }
 
     button:disabled {
@@ -89,8 +81,6 @@
     }
     
     button:focus {
-        outline: 1px solid var(--theme-color);
-        outline-offset: 0.125rem;
         transform: scale(1.1) rotate(2.5deg);
     }
 
@@ -121,8 +111,13 @@
         justify-items: center;
         background: var(--theme-color);
         font-size: calc(var(--font-size) * var(--font-scale));
+        -webkit-backface-visibility: hidden;
         backface-visibility: hidden;
         transition: background 0.15s;
+    }
+
+    .back {
+        transform: rotateX(180deg);
     }
 
     .invalid .main, .invalid .back, .invalid .shortcut {

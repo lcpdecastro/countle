@@ -1,7 +1,9 @@
 <script>
     import { createEventDispatcher } from "svelte";
-    import IconBackspace from '~icons/system-uicons/backspace';
-    import IconTrash from '~icons/system-uicons/trash';
+    import IconBackspace from 'phosphor-svelte/lib/Backspace';
+    import IconTrash from 'phosphor-svelte/lib/Trash';
+    import IconCheck from 'phosphor-svelte/lib/Check';
+    import IconX from 'phosphor-svelte/lib/X';
 
     import dictionary from '$lib/js/dictionary.js';
 
@@ -10,17 +12,21 @@
     export let word;
 
     $: displayWord = word.reduce((p, c) => `${p}${c.value}`, '');
+    $: invalid = !dictionary.has(displayWord.toLowerCase());
 </script>
 
-<div class="wrapper" class:empty={ !word.length } class:nine={ word.length === 9 } class:invalid={ !dictionary.has(displayWord.toLowerCase()) }>
+<div class="wrapper" class:empty={ !word.length } class:nine={ word.length === 9 } class:invalid>
+    <span class="word-status" style:color={ invalid ? 'var(--red)' : 'var(--green)' }>
+        <svelte:component this={ word.length === 0 ? null : invalid ? IconX : IconCheck } size="100%" />
+    </span>
     <div class="word">
         { displayWord || '\u00a0' }
     </div>
     <button type="button" class="backspace" disabled={ !word.length } on:click={ () => dispatch('backspace') }>
-        <IconBackspace width="100" height="100%" />
+        <IconBackspace size="100%" />
     </button>
     <button type="button" class="clear" disabled={ !word.length } on:click={ () => dispatch('clear') }>
-        <IconTrash width="100" height="100%" />
+        <IconTrash size="100%" />
     </button>
 </div>
 
@@ -47,6 +53,12 @@
 
     .wrapper.invalid {
         color: var(--red);
+    }
+
+    .word-status {
+        width: 1.5rem;
+        height: 1.5rem;
+        flex-shrink: 0;
     }
 
     .word {

@@ -1,21 +1,21 @@
 <script>
-    import IconSettings from '~icons/system-uicons/settings';
+    import IconSettings from 'phosphor-svelte/lib/Gear';
     
     import settings from '$lib/js/settings.js';
 
     import Modal from '$lib/components/Modal.svelte';
 
-    let settingsOpen = false;
+    let open = false;
 </script>
 
-<button on:click={ () => settingsOpen = true }>
-    <IconSettings width="100%" height="100%" />
+<button on:click={ () => open = true }>
+    <IconSettings size="100%" />
 </button>
 
-<Modal bind:open={ settingsOpen }>
-    <div class="modal-body">
-        <h1>Settings</h1>
+<Modal bind:open>
+    <svelte:fragment slot="title">Settings</svelte:fragment>
 
+    <div class="modal-body" slot="body">
         <div class="inputs">
             <input type="checkbox" id="reducedMotion" bind:checked={ $settings['reducedMotion'] }>
             <label for="reducedMotion">
@@ -74,10 +74,7 @@
         display: flex;
         flex-direction: column;
         gap: 1rem;
-    }
-
-    .modal-body > h1 {
-        margin: 0;
+        line-height: 1.25;
     }
 
     .inputs {

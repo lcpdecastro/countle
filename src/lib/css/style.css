@@ -1,12 +1,8 @@
 :root {
-    --blue: hsl(231, 86%, 39%);
-    --green: hsl(113, 91%, 37%);
-    --red: hsl(4, 98%, 60%);
-
-    /*
-    --purple: hsl(281, 89%, 46%);
-    --gold: hsl(41, 85%, 49%);
-    */
+    --blue: #3167fa;
+    --green: #0ed100;
+    --red: #fa3838;
+    --yellow: #eba70c;
     
     font-size: min(1rem, 4vw);
     touch-action: manipulation;

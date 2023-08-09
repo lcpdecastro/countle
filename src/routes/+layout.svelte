@@ -1,23 +1,34 @@
 <script>
-    import '$lib/css/style.css';
+    import dayjs from 'dayjs';
 
     import { page } from '$app/stores';
 
-    import gameState, { soloState, totalScore } from '$lib/js/stores.js';
+    import Menu from '$lib/components/Menu.svelte';
+    import Instructions from '../lib/components/Instructions.svelte';
+
+    import '$lib/css/style.css';
+    
+    $: name = $page.route.id.split?.('/').filter(x => x).map(x => x[0].toUpperCase() + x.slice(1)).join(' ');
 </script>
 
-<header>
+<svelte:head>
+    <title>COUNTLE: { name }</title>
+    <link rel="icon" href={ `/icon-${name.toLowerCase().replace(' ', '-')}.png` } />
+    <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#eba70c' : '#3167fa' }>
+</svelte:head>
+
+<header style:--theme-color={ $page.url.pathname.includes('daily') ? '#eba70c' : null }>
     <div>
         <h1>COUNTLE</h1>
-        { #if $gameState }
-            <span>ROUND { $gameState.round } / { $gameState.games.length }</span>
-            <span>SCORE: <b>{ $totalScore }</b></span>
-        { :else if $page.url.pathname.endsWith('/solo') }
-            <span class="buttons">
-                <button type="button" class:active={ $soloState === 'l' } on:click={ () => $soloState = 'l' }>LETTERS</button>
-                <button type="button" class:active={ $soloState === 'n' } on:click={ () => $soloState = 'n' }>NUMBERS</button>
-            </span>
-        { /if }
+        <span>
+            <span>{ $page.route.id.split?.('/').at(-1).toUpperCase() }</span>
+            <span class="sub">{ $page.route.id.includes('daily') ? dayjs().format('YYYY.MM.DD') : 'INFINITE' }</span>
+        </span>
+        <span>
+            <Instructions />
+        </span>
+        
+        <Menu />
     </div>
 </header>
 
@@ -57,30 +68,14 @@
     }
 
     header > div > span {
-        margin-left: auto;
-    }
-
-    header > div > .buttons {
         display: flex;
-        gap: 0.5rem;
+        flex-direction: column;
+        line-height: 1;
     }
 
-    header > div > .buttons > button {
-        padding: 0.25rem 0.45rem;
-        border-radius: 0.5rem;
-        transition-property: background, color;
-        transition-duration: 0.1s;
-    }
-
-    header > div > .buttons > button.active,
-    header > div > .buttons > button:hover,
-    header > div > .buttons > button:focus {
-        background: white;
-        color: var(--theme-color);
-    }
-
-    header > div > .buttons > button.active {
-        font-weight: bold;
+    header > div > span > .sub {
+        font-size: 75%;
+        font-weight: 500;
     }
 
     main {

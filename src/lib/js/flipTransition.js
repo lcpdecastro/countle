@@ -2,19 +2,11 @@ import { get } from "svelte/store";
 import settings from "./settings.js";
 import cssEase from "./cssEase.js";
 
-function flip (node, { duration = 300, easing = cssEase } = {}) {
+function flip (node, { duration = 300, easing = cssEase, from = -180, to = 0 } = {}) {
     return {
         duration,
         easing,
-        css: (t, u) => `transform: rotateX(${180 * u}deg);`
-    };
-}
-
-function halfFlip (node, { duration = 150, easing = cssEase } = {}) {
-    return {
-        duration,
-        easing,
-        css: (t, u) => `transform: rotateX(${90 * u}deg);`
+        css: t => `transform: rotateX(${from + ((to - from) * t)}deg)`
     };
 }
 
@@ -22,22 +14,10 @@ function fadeInOut (node, { duration = 300, easing = cssEase } = {}) {
     return {
         duration,
         easing,
-        css: (t, u) => `opacity: ${Math.max(0, 2 * t - 1)};`
+        css: t => `opacity: ${Math.max(0, 2 * t - 1)};`
     };
 }
 
-function fade (node, { duration = 150, easing = cssEase } = {}) {
-    return {
-        duration,
-        easing,
-        css: (t, u) => `opacity: ${t};`
-    }
-}
-
-export function flipTransition (node) {
-    if (get(settings)['reducedMotion']) return fadeInOut(node); else return flip(node);
-}
-
-export function halfFlipTransition (node) {
-    if (get(settings)['reducedMotion']) return fade(node); else return halfFlip(node);
+export default function flipTransition (node, options = {}) {
+    if (get(settings)['reducedMotion']) return fadeInOut(node, options); else return flip(node, options);
 }

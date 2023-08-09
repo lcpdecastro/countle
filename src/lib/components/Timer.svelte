@@ -9,7 +9,6 @@
 
     export let duration = 30;
     export let done = false;
-    export let solved = false;
     
     export function start () {
         value.set(0).then(() => {
@@ -23,10 +22,17 @@
         value.set(duration, { duration: $settings['reducedMotion'] ? 0 : 150, easing: cssEase });
     }
 
+    export function drain () {
+        value.set(0, { duration: 0 }).then(() => {
+            done = true;
+            dispatch('timerdone');
+        });
+    }
+
     let value = tweened(duration, { duration: duration * 1000 });
 </script>
 
-<div class:red={ $value <= 5 } class:solved>
+<div class:red={ $value <= 5 }>
     <div class="timer">
         <div style:right={ `${100 * ((duration - $value) / duration)}%` }></div>
     </div>
@@ -46,7 +52,7 @@
         height: 0.5rem;
         flex-grow: 1;
         flex-basis: 0;
-        background: hsl(0, 0%, 90%);
+        background: hsl(0, 0%, 0%, 20%);
         overflow: hidden;
     }
     
@@ -65,10 +71,6 @@
     .red .timer > div {
         background: var(--red);
     }
-
-    .solved .timer > div {
-        background: var(--green);
-    }
     
     span {
         flex-shrink: 0;
@@ -81,9 +83,5 @@
     
     .red span {
         color: var(--red);
-    }
-
-    .solved span {
-        color: var(--green);
     }
 </style>
