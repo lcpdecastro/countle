@@ -2,23 +2,22 @@ import { get, writable } from "svelte/store";
 import { browser } from "$app/environment";
 import dayjs from "dayjs";
 
-const dailyInit = {
-    'date': dayjs().format('YYYYMMDD'),
-    'letters': null,
-    'numbers': null
-};
+function dailyInit () {
+    return {
+        'date': dayjs().format('YYYYMMDD'),
+        'letters': null,
+        'numbers': null
+    }
+}
 
-const daily = writable((() => {
-    if (browser) {
-        const j = JSON.parse(localStorage.getItem('daily'));
-        if (!j) return dailyInit;
-        if (j?.date !== dayjs().format('YYYYMMDD')) return dailyInit;
-        return j;
-    } return dailyInit;
-})());
+const daily = writable(browser ? JSON.parse(localStorage.getItem('daily')) : dailyInit());
 
 daily.subscribe(value => {
-    if (browser) localStorage.setItem('daily', JSON.stringify(value));
+    if (value?.date !== dayjs().format('YYYYMMDD')) {
+        const v = dailyInit();
+        daily.set(v);
+        localStorage.setItem('daily', JSON.stringify(v));
+    }
 });
 
 export function logDaily (x) {
@@ -28,7 +27,7 @@ export function logDaily (x) {
         if ('letters' in x) d.letters ??= x.letters;
         else if ('numbers' in x) d.numbers ??= x.numbers;
         daily.set(d);
-    } else daily.set(dailyInit);
+    } else daily.set(dailyInit());
 }
 
 export function getDaily (game) {

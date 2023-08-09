@@ -52,7 +52,7 @@
         height: 0.5rem;
         flex-grow: 1;
         flex-basis: 0;
-        background: hsl(0, 0%, 0%, 20%);
+        background: hsl(0, 0%, 0%, 10%);
         overflow: hidden;
     }
     

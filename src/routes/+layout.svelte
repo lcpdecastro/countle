@@ -76,6 +76,7 @@
     header > div > span > .sub {
         font-size: 75%;
         font-weight: 500;
+        font-variant-numeric: tabular-nums;
     }
 
     main {
