@@ -39,7 +39,7 @@
                     The letter selection pools are randomly arranged, so you won&CloseCurlyQuote;t know what letter you&CloseCurlyQuote;ll be getting until you choose it.
                 </p>
                 <p>
-                    Of course, to make sure that a word can actually be made out of the letters on the board, a minimum of <b>three vowels</b> or <b>four consonants</b> are required.
+                    Of course, to make sure that a word can actually be made out of the letters on the board, a maximum of <b>five vowels</b> or <b>six consonants</b> are required.
                     The game will disable the appropriate selection button should one of these limits be reached.
                 </p>
             { /if }
@@ -118,26 +118,32 @@
                 Remember: the game <b>does not</b> automatically add your intermediate results to reach the target.
                 For example, if the target is 200 and your two steps result in 150 and 50, the game will <b>not</b> consider your solution to be complete unless you explicitly add them together in a third step.
             </p>
+            <p>
+                Because of the randomized nature of the number selection process, it is possible for the six random numbers to be unable to reach the target exactly.
+                This is especially the case for all-small numbers and a very big target, four larges and two smalls, or selections with two 1&CloseCurlyQuote;s.
+                If the solver can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
+            </p>
 
             <h2>Default input</h2>
             <p>
                 To select a number, click on it to use it in an intermediate step.
                 You may also immediately chain the result of a step to another step by selecting an operator immediately after receiving it.
                 Clicking on a number that is already being used in your solution will deselect it, returning it to where it came from and removing <i>all</i> steps after it.
-                Be careful!
+                Be careful where you click!
             </p>
             <p>
-                To select an operation, click on its respective operation button.
-                To remove an operator, click on the operator in the intermediate step.
+                To select an operator, click on its respective button.
+                To remove an operator, click on it in the intermediate step.
+                Like with the numbers, removing an operator removes <i>all</i> steps after it.
             </p>
             <p>
                 The operator buttons will automatically be grayed out if the operation would create an illegal result (e.g., trying to divide 5 by 2).
                 It will also be grayed out for operations that would be repetitive (e.g., subtracting 8 by 4; you might as well just use the 4 on its own).
-                Likewise, if you&CloseCurlyQuote;ve selected your first operand and your operator, any numbers that would result in a repetitive operation will become unselectable.
+                Likewise, if you&CloseCurlyQuote;ve selected your first operand and your operator, any numbers that would result in an illegal or repetitive operation will become unselectable.
             </p>
             <p>
                 By default, operators are selected from a separate selection panel at the bottom of the steps area.
-                Through the settings, you may enable an alternative operator selection method, which brings the operators buttons to each step instead of on a separate panel.
+                Through the settings, you may enable an alternative operator selection method, which brings the operator buttons to each step instead of on a separate panel.
                 This method, however, may be difficult to work with, since the selection buttons will be much smaller.
                 Chaining intermediate results would also be impossible unless you use a keyboard.
             </p>
@@ -178,7 +184,7 @@
     .modal-body {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.75rem;
         line-height: 1.25;
     }
 

@@ -13,17 +13,19 @@ function dailyInit () {
 const daily = writable(browser ? JSON.parse(localStorage.getItem('daily')) : dailyInit());
 
 daily.subscribe(value => {
-    if (value?.date !== dayjs().format('YYYYMMDD')) {
-        const v = dailyInit();
-        daily.set(v);
-        localStorage.setItem('daily', JSON.stringify(v));
+    if (browser) {
+        if (value?.date !== dayjs().format('YYYYMMDD')) {
+            const v = dailyInit();
+            daily.set(v);
+            localStorage.setItem('daily', JSON.stringify(v));
+        } else localStorage.setItem('daily', JSON.stringify(value));
     }
 });
 
 export function logDaily (x) {
     const d = get(daily);
 
-    if (get(daily).date === dayjs().format('YYYYMMDD')) {
+    if (d.date === dayjs().format('YYYYMMDD')) {
         if ('letters' in x) d.letters ??= x.letters;
         else if ('numbers' in x) d.numbers ??= x.numbers;
         daily.set(d);

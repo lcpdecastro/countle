@@ -1,4 +1,5 @@
 import dictionary from './dictionary.js';
+import solveNumbers2 from './solver2.js';
 
 function isFlattenable (arr, op) {
     const inv = { '+': '-', '-': '+', '*': '/', '/': '*' };
@@ -176,6 +177,6 @@ function solveLetters (letters) {
     return out;
 }
 
-const solve = { solveLetters, solveNumbers };
+const solve = { solveLetters, solveNumbers: solveNumbers2 };
 
 export default solve;

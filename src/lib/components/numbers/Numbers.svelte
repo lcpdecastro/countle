@@ -5,7 +5,6 @@
 
     import settings from '$lib/js/settings.js';
     import flipTransition from '$lib/js/flipTransition.js';
-    import { stringifySteps } from '$lib/js/solvers.js';
     import { getDaily } from '$lib/js/daily.js';
 
     import NumbersTarget from '$lib/components/numbers/NumbersTarget.svelte';
@@ -359,7 +358,7 @@
     </span>
     
     { #if sampleSolution }
-        { @const steps = stringifySteps(sampleSolution.steps).replaceAll('-', '\u2212').replaceAll('*', '\u00d7').replaceAll('/', '\u00f7') }
+        { @const steps = sampleSolution.steps.replaceAll('-', '\u2212').replaceAll('*', '\u00d7').replaceAll('/', '\u00f7') }
 
         <p style:margin=0 style:text-align="center" style:display="flex" style:flex-direction="column" style:gap="0.25rem">
             <span><b>{ results.diff ? `${steps} = ${sampleSolution.value}` : steps }</b></span>
