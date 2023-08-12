@@ -6,7 +6,7 @@
     import Timer from '$lib/components/Timer.svelte';
     import Settings from '$lib/components/Settings.svelte';
 
-    import { logDaily } from '$lib/js/daily.js';
+    import { logDaily, checkDaily } from '$lib/js/daily.js';
 
     import { page } from '$app/stores';
 
@@ -23,6 +23,8 @@
 
     let daily = $page.url.pathname.includes('daily');
     setContext('daily', $page.url.pathname.includes('daily'));
+
+    if (daily) checkDaily();
 
     $: {
         void $page;

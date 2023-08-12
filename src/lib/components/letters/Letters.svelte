@@ -159,7 +159,7 @@
             on:selectsquare={ e => selectSquare(e.detail) }
         />
 
-        <LettersInput { word }
+        <LettersInput { word } disabled={ timerDone }
             on:backspace={ backspace }
             on:clear={ clear }
         />

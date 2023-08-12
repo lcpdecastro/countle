@@ -12,15 +12,7 @@ function dailyInit () {
 
 const daily = writable(browser ? JSON.parse(localStorage.getItem('daily')) : dailyInit());
 
-daily.subscribe(value => {
-    if (browser) {
-        if (value?.date !== dayjs().format('YYYYMMDD')) {
-            const v = dailyInit();
-            daily.set(v);
-            localStorage.setItem('daily', JSON.stringify(v));
-        } else localStorage.setItem('daily', JSON.stringify(value));
-    }
-});
+daily.subscribe(checkDaily);
 
 export function logDaily (x) {
     const d = get(daily);
@@ -34,4 +26,14 @@ export function logDaily (x) {
 
 export function getDaily (game) {
     return get(daily)[game];
+}
+
+export function checkDaily (value = get(daily)) {
+    if (browser) {
+        if (value?.date !== dayjs().format('YYYYMMDD')) {
+            const v = dailyInit();
+            daily.set(v);
+            localStorage.setItem('daily', JSON.stringify(v));
+        } else localStorage.setItem('daily', JSON.stringify(value));
+    }
 }

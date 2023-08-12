@@ -174,6 +174,8 @@ function solveLetters (letters) {
         }
     }
 
+    out.words.sort();
+
     return out;
 }
 
