@@ -58,16 +58,6 @@ class N {
             steps: this.stringifySteps()
         }
     }
-
-    isRoundabout (v = []) {
-        if (this.steps.length === 1) return false;
-        
-        const s = this.steps.filter(x => x instanceof N);
-        const nv = v.concat(this.value);
-
-        if (s.some(x => nv.includes(x.value))) return true;
-        return s.some(x => x.isRoundabout(nv));
-    }
 }
 
 function* numbersHelper (numbers) {
@@ -109,7 +99,6 @@ export default function solveNumbers (numbers, target) {
     const g = numbersHelper(numbers.map(x => new N(x)));
     
     const solutions = [];
-    const roundabouts = [];
 
     let diff = Infinity;
     
@@ -119,8 +108,6 @@ export default function solveNumbers (numbers, target) {
     
         const v = n.value.at(-1);
         const vn = v.normalize();
-
-        if (v.isRoundabout() && !roundabouts.find(x => x.eq(vn))) roundabouts.push(vn);
 
         const d = Math.abs(v.value - target);
         if (d <= diff) {
@@ -133,8 +120,5 @@ export default function solveNumbers (numbers, target) {
         }
     }
     
-    return {
-        diff,
-        solutions: solutions.filter(x => !roundabouts.find(y => y.eq(x))).map(x => x.toObject())
-    }
+    return { diff, solutions: solutions.map(x => x.toObject()) };
 }
