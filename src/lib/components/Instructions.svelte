@@ -111,6 +111,10 @@
                 For example, you&CloseCurlyQuote;re welcome to use two 2&CloseCurlyQuote;s, as long as you have two 2&CloseCurlyQuote;s (in your random six and/or in your intermediate results).
             </p>
             <p>
+                Also, just because there&OpenCurlyQuote;s six numbers doesn&OpenCurlyQuote;t mean you have to use them all.
+                As long as you can reach the target and you follow the rules above, your solution will be considered valid.
+            </p>
+            <p>
                 There is no &OpenCurlyDoubleQuote;submit&CloseCurlyDoubleQuote; button in this game; just keep your solution on screen until the timer runs out.
                 Should you be able to reach the target, your solution will be locked in and will no longer be editable.
             </p>
