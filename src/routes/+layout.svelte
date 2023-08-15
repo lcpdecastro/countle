@@ -4,7 +4,8 @@
     import { page } from '$app/stores';
 
     import Menu from '$lib/components/Menu.svelte';
-    import Instructions from '../lib/components/Instructions.svelte';
+    import About from '$lib/components/About.svelte';
+    import Instructions from '$lib/components/Instructions.svelte';
 
     import '$lib/css/style.css';
     
@@ -19,7 +20,7 @@
 
 <header style:--theme-color={ $page.url.pathname.includes('daily') ? '#eba70c' : null }>
     <div>
-        <h1>COUNTLE</h1>
+        <About />
         <span>
             <span>{ $page.route.id.split?.('/').at(-1).toUpperCase() }</span>
             <span class="sub">{ $page.route.id.includes('daily') ? dayjs().format('YYYY.MM.DD') : 'INFINITE' }</span>
@@ -60,11 +61,6 @@
         display: flex;
         align-items: center;
         gap: 1rem;
-    }
-
-    header > div > h1 {
-        margin: 0;
-        font-size: 1.5rem;
     }
 
     header > div > span {

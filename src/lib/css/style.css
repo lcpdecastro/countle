@@ -60,3 +60,7 @@ input[type=text]:focus, input[type=text]:active {
 input:disabled {
     pointer-events: none;
 }
+
+a[href] {
+    color: var(--theme-color);
+}
