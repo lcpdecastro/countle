@@ -1,6 +1,5 @@
 <script>
     import Modal from '$lib/components/Modal.svelte';
-    import Title from '$lib/components/Title.svelte';
 
     let open = false;
 </script>
@@ -13,7 +12,7 @@
     <svelte:fragment slot="title">About</svelte:fragment>
 
     <div class="modal-body" slot="body">
-        <Title />
+        <img style:width="100%" style:max-width="25rem" style:height="auto" style:margin="0.5rem 0" style:align-self="center" src="/logo.png" alt="Countle logo">
 
         <p>
             A recreation of the British game show <i>Countdown</i>, with a daily mode inspired by <i>Wordle</i>.

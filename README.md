@@ -4,7 +4,7 @@ A recreation of the British game show *Countdown*, with a daily mode inspired by
 
 Play the game [here](https://countle.vercel.app)!
 
-Not related to the similarly-named [*countle.org*](https://countle.org), which also features a daily Numbers game.
+Not related to the similarly-named [countle.org](https://countle.org), which also features a daily Numbers game.
 
 American English word list from [SCOWL and Friends](http://wordlist.aspell.net/). Icons from [Phosphor Icons](https://phosphoricons.com/).
 
