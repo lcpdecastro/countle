@@ -19,10 +19,13 @@
             A recreation of the British game show <i>Countdown</i>, with a daily mode inspired by <i>Wordle</i>.
         </p>
         <p>
-            Not related to the similarly-named <a href="https://countle.org">Countle.org</a>, which also features a daily Numbers game.
+            Not related to the similarly-named <a href="https://countle.org">countle.org</a>, which also features a daily Numbers game.
         </p>
         <p>
-            Special thanks to <a href="http://wordlist.aspell.net/">SCOWL and Friends</a> and <a href="https://phosphoricons.com/">Phosphor Icons</a>.
+            Issues and/or suggestions? Let me know on <a href="https://github.com/lcpdecastro/countle-2023">GitHub</a>!
+        </p>
+        <p>
+            American English dictionary from <a href="http://wordlist.aspell.net/">SCOWL and Friends</a>. Icons from <a href="https://phosphoricons.com/">Phosphor Icons</a>.
         </p>
 
         <h2>Countle Legacy</h2>

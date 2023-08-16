@@ -1,38 +1,15 @@
-# create-svelte
+![CountleLogo](./logo.png)
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+A recreation of the British game show *Countdown*, with a daily mode inspired by *Wordle*.
 
-## Creating a project
+Play the game [here](https://countle.vercel.app)!
 
-If you're seeing this, you've probably already done this step. Congrats!
+Not related to the similarly-named [*countle.org*](https://countle.org), which also features a daily Numbers game.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+American English word list from [SCOWL and Friends](http://wordlist.aspell.net/). Icons from [Phosphor Icons](https://phosphoricons.com/).
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+## Countle Legacy
 
-## Developing
+This version of Countle is a reworked version of the original, which is now [archived on GitHub]("https://github.com/lcpdecastro/countle-legacy") but can still be accessed [here]("https://countle-legacy.vercel.app").
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+Note that the legacy version of Countle has a faulty Numbers solver which fails to find solutions to some otherwise solvable puzzles, an issue which is fixed in this new version.
