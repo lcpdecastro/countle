@@ -1,6 +1,8 @@
 <script>
     import Modal from '$lib/components/Modal.svelte';
 
+    import { page } from '$app/stores';
+
     let open = false;
 </script>
 
@@ -12,19 +14,19 @@
     <svelte:fragment slot="title">About</svelte:fragment>
 
     <div class="modal-body" slot="body">
-        <img style:width="100%" style:max-width="25rem" style:height="auto" style:margin="0.5rem 0" style:align-self="center" src="/logo.png" alt="Countle logo">
+        <img style:width="100%" style:max-width="25rem" style:height="auto" style:margin="0.5rem 0" style:align-self="center" src={ `/logo-${$page.url.pathname.includes('daily') ? 'yellow' : 'blue'}.png` } alt="Countle logo">
 
         <p>
             A recreation of the British game show <i>Countdown</i>, with a daily mode inspired by <i>Wordle</i>.
         </p>
         <p>
-            Not related to the similarly-named <a href="https://countle.org">countle.org</a>, which also features a daily Numbers game.
+            Not related to the similarly named <a href="https://www.countle.org">countle.org</a>, which also features a daily Numbers game.
         </p>
         <p>
             Issues and/or suggestions? Let me know on <a href="https://github.com/lcpdecastro/countle-2023">GitHub</a>!
         </p>
         <p>
-            American English dictionary from <a href="http://wordlist.aspell.net/">SCOWL and Friends</a>. Icons from <a href="https://phosphoricons.com/">Phosphor Icons</a>.
+            American English dictionary from <a href="http://wordlist.aspell.net">SCOWL and Friends</a>. Icons from <a href="https://phosphoricons.com">Phosphor Icons</a>.
         </p>
 
         <h2>Countle Legacy</h2>
