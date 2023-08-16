@@ -39,11 +39,11 @@
     button {
         padding: initial;
         border-radius: 0.5rem;
-        outline-offset: 0.25rem;
     }
 
     button:focus, button:active {
         text-decoration: underline;
+        outline: none;
     }
 
     button > h1 {

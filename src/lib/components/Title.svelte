@@ -12,7 +12,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: calc(0.03125 * var(--font-size));
+        gap: calc(0.0625 * var(--font-size));
         font-weight: 900;
         font-size: var(--font-size);
         color: var(--theme-color);
