@@ -49,7 +49,7 @@
     }
 
     export function getDailyTrial () {
-        let cc = numbers.concat(steps.map(s => s.r));
+        let cc = numbers.concat(steps.map(s => s.r)).filter(x => x);
 
         return {
             numbers: {
@@ -245,7 +245,7 @@
     }
 
     // ==========#==========#==========#========== //
-    
+
     onMount(() => {
         const d = getDaily('numbers');
 
@@ -254,22 +254,22 @@
 
             for (let x of d.input) {
                 steps = steps.concat({
-                    a: numbers[x[0]] ?? steps[x[0] - 6].r ?? null,
+                    a: numbers[x[0]] ?? steps[x[0] - 6]?.r ?? null,
                     o: x[1],
-                    b: numbers[x[2]] ?? steps[x[2] - 6].r ?? null
+                    b: numbers[x[2]] ?? steps[x[2] - 6]?.r ?? null
                 });
 
-                const a = steps.at(-1).a.value;
+                const a = steps.at(-1).a?.value;
                 const o = steps.at(-1).o;
-                const b = steps.at(-1).b.value;
+                const b = steps.at(-1).b?.value;
 
-                steps.at(-1).r = {
+                if (a && b) steps.at(-1).r = {
                     value: o === '\u002b' ? a + b : o === '\u2212' ? a - b : o === '\u00d7' ? a * b : o === '\u00f7' ? a / b : null,
                     selected: false
                 };
 
-                steps.at(-1).a.selected = true;
-                steps.at(-1).b.selected = true;
+                if (a) steps.at(-1).a.selected = true;
+                if (b) steps.at(-1).b.selected = true;
             }
 
             results = d.results;
