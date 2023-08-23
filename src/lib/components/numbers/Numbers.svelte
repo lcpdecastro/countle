@@ -128,6 +128,7 @@
 
     function selectOperation (op) {
         if (solved) return;
+        if (steps.length === 5) return;
 
         let lastStep = steps.at(-1);
         if (!lastStep) return;
