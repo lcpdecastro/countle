@@ -128,7 +128,7 @@
 
     function selectOperation (op) {
         if (solved) return;
-        if (steps.length === 5) return;
+        if (steps?.[4]?.r) return;
 
         let lastStep = steps.at(-1);
         if (!lastStep) return;
