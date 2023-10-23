@@ -111,7 +111,7 @@
                 For example, you&CloseCurlyQuote;re welcome to use two 2&CloseCurlyQuote;s, as long as you have two 2&CloseCurlyQuote;s (in your random six and/or in your intermediate results).
             </p>
             <p>
-                Also, just because there&OpenCurlyQuote;s six numbers doesn&OpenCurlyQuote;t mean you have to use them all.
+                Also, just because there&CloseCurlyQuote;s six numbers doesn&CloseCurlyQuote;t mean you have to use them all.
                 As long as you can reach the target and you follow the rules above, your solution will be considered valid.
             </p>
             <p>
