@@ -359,10 +359,8 @@
     </span>
     
     { #if sampleSolution }
-        { @const steps = sampleSolution.steps.replaceAll('-', '\u2212').replaceAll('*', '\u00d7').replaceAll('/', '\u00f7') }
-
         <p style:margin=0 style:text-align="center" style:display="flex" style:flex-direction="column" style:gap="0.25rem">
-            <span><b>{ results.diff ? `${steps} = ${sampleSolution.value}` : steps }</b></span>
+            <span><b>{ results.diff ? `${sampleSolution.steps} = ${sampleSolution.value}` : sampleSolution.steps }</b></span>
             <svelte:element this={ results.diff ? 'span' : null }>({ results.diff } away)</svelte:element>
             <i style:font-size="smaller">({ results.solutions.length } solution{ results.solutions.length === 1 ? '' : 's' } found)</i>
         </p>
