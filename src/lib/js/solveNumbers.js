@@ -11,6 +11,11 @@ class Number {
 }
 
 function sorter (a, b) {
+    if (typeof a === 'string' && typeof b === 'string') {
+        const s = '+-*/'.indexOf(a) - '+-*/'.indexOf(b);
+        if (s) return s;
+    }
+
     if (a.steps.length === 1 && b.steps.length === 1) return a.value - b.value;
     else {
         if (a.steps.length !== b.steps.length) return a.steps.length - b.steps.length;
