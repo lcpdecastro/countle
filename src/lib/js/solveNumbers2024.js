@@ -177,7 +177,7 @@ function solve (numbers, target) {
         diff = d;
       }
 
-      solutions.push(solution);
+      solutions.push({ value: solution.value, steps: solution.toString() });
       solutionSet.add(solution.toString());
     }
   }
