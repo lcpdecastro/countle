@@ -1,435 +1,336 @@
 <script>
-    import { createEventDispatcher, getContext, onMount } from 'svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
+  import { fade } from 'svelte/transition';
+  import shuffleList from 'shuffle-list';
 
-    import shuffleList from 'shuffle-list';
+  import flip from '$lib/js/flipTransition.js';
+  import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-    import settings from '$lib/js/settings.js';
-    import flipTransition from '$lib/js/flipTransition.js';
-    import { getDaily } from '$lib/js/daily.js';
+  import Target from './Target.svelte';
+  import NumberSelection from './NumberSelection.svelte';
+  import Steps from './Steps.svelte';
+  import OperationPanel from './OperationPanel.svelte';
 
-    import NumbersTarget from '$lib/components/numbers/NumbersTarget.svelte';
-    import NumbersSquares from '$lib/components/numbers/NumbersSquares.svelte';
-    import NumbersSteps from '$lib/components/numbers/NumbersSteps.svelte';
+  const dispatch = createEventDispatcher();
 
-    const dispatch = createEventDispatcher();
+  const running = getContext('running');
+  const done = getContext('done');
 
-    // ==========#==========#==========#========== //
+  class N {
+    used = $state(false);
+    valid = $state(true);
 
-    let smallNumbers = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
-    let largeNumbers = shuffleList([25, 50, 75, 100]);
-    
-    let numbers = [];
-    let target = null;
-    let steps = [];
-    let started = false;
+    constructor (value) {
+      this.value = value;
+    }
+  }
 
-    let solved;
+  let smallBin = $state(shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]));
+  let largeBin = $state(shuffleList([25, 50, 75, 100]));
 
-    // ==========#==========#==========#========== //
+  let numbers = $state([]);
+  let target = $state();
+  let steps = $state([]);
 
-    const daily = getContext('daily');
+  let solutions = $state();
+  let sampleSolution = $state();
 
-    // ==========#==========#==========#========== //
-    
-    export let timerDone;
+  let worker = $state();
+  $effect(() => {
+    if (!worker) {
+      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+      worker.addEventListener('message', e => solutions = e.data);
+    }
+  });
 
-    export function reset () {
-        smallNumbers = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
-        largeNumbers = shuffleList([25, 50, 75, 100]);
+  function pickNumber (large = false) {
+    if (large) numbers.push(new N(largeBin.pop()));
+    else numbers.push(new N(smallBin.pop()));
+  }
+  
+  function pickTarget () {
+    target = Math.floor(Math.random() * 899) + 101;
+    dispatch('startgame');
+    worker.postMessage({ numbers: numbers.map(x => x.value), target });
+  }
 
-        numbers = [];
-        target = null;
-        steps = [];
-        started = false;
+  function selectNumber (x) {
+    if (steps.length === 0 || !(steps.at(-1).a && steps.at(-1).b && !steps.at(-1).o)) {
+      x.used = true;
 
-        results = null;
-        sampleSolution = null;
+      if (steps.length === 0 || steps.at(-1).c) {
+        steps.push({
+          a: x,
+          o: null,
+          b: null,
+          c: null
+        });
+      } else {
+        if (!steps.at(-1).a) steps.at(-1).a = x;
+        else steps.at(-1).b = x;
+      }
+    }
+  }
 
-        dispatch('resettimer');
+  function removeNumber (row, x) {
+    if (!steps[row][x]) return;
+
+    steps[row][x].used = false;
+    steps[row][x] = null;
+    while (steps.length > row + 1) {
+      if (steps.at(-1).a) steps.at(-1).a.used = false;
+      if (steps.at(-1).b) steps.at(-1).b.used = false;
+      steps.pop();
     }
 
-    export function getDailyTrial () {
-        let cc = numbers.concat(steps.map(s => s.r)).filter(x => x);
+    if (!steps.at(-1).a && !steps.at(-1).b) steps.pop();
+  }
+  
+  function selectOperation (x) {
+    if (steps.at(-1).c) {
+      selectNumber(steps.at(-1).c);
+      steps.at(-1).o = x;
+    }
+    else if (!steps.at(-1).o) steps.at(-1).o = x;
+  }
+  
+  function removeOperation (row) {
+    if (!steps[row].o) return;
 
-        return {
-            numbers: {
-                input: steps.map(s => [cc.indexOf(s.a), s.o, cc.indexOf(s.b)]),
-                results
-            }
-        };
+    steps[row].o = null;
+    while (steps.length > row + 1) {
+      if (steps.at(-1).a) steps.at(-1).a.used = false;
+      if (steps.at(-1).b) steps.at(-1).b.used = false;
+      steps.pop();
+    }
+  }
+
+  function removeRow (row) {
+    for (let i = steps.length - 1; i >= row; i--) {
+      if (steps[i].a) steps[i].a.used = false;
+      if (steps[i].b) steps[i].b.used = false;
     }
 
-    // ==========#==========#==========#========== //
+    steps.splice(row, steps.length - row);
+  }
 
-    function generateNumber (isLarge = false) {
-        let value;
+  function resetGame () {
+    smallBin = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
+    largeBin = shuffleList([25, 50, 75, 100]);
 
-        if (isLarge) {
-            value = largeNumbers.pop();
-            largeNumbers = largeNumbers;
-        } else {
-            value = smallNumbers.pop();
-            smallNumbers = smallNumbers;
+    numbers = [];
+    target = undefined;
+    steps = [];
+
+    solutions = undefined;
+    sampleSolution = undefined;
+
+    dispatch('resetgame');
+  }
+
+  function showSolution () {
+    sampleSolution = solutions.solutions[Math.floor(Math.random() * solutions.solutions.length)];
+  }
+
+  // compute row results
+  $effect(() => {
+    if (steps.length > 0) {
+      if (steps.at(-1).a && steps.at(-1).o && steps.at(-1).b) {
+        steps.at(-1).c = new N(
+          steps.at(-1).o === '\u002b' ? steps.at(-1).a.value + steps.at(-1).b.value :
+          steps.at(-1).o === '\u2212' ? steps.at(-1).a.value - steps.at(-1).b.value :
+          steps.at(-1).o === '\u00d7' ? steps.at(-1).a.value * steps.at(-1).b.value :
+          steps.at(-1).o === '\u00f7' ? steps.at(-1).a.value / steps.at(-1).b.value :
+          undefined
+        );
+      } else steps.at(-1).c = null;
+    }
+  });
+  
+  // mark invalid numbers
+  $effect(() => {
+    for (let x of numbers.concat(steps.filter(y => y.c).map(y => y.c))) {
+      if (x.used) continue;
+
+      x.valid = true;
+
+      if (steps.at(-1) && !steps.at(-1).c) {
+        const { a, b, o } = steps.at(-1);
+
+        if (o === '\u2212') {
+          if (a && (x.value >= a.value || a.value === x.value * 2)) x.valid = false;
+          else if (b && (x.value <= b.value || x.value === b.value * 2)) x.valid = false;
         }
-
-        numbers = numbers.concat({ value, selected: false, valid: true });
-    }
-
-    function generateTarget () {
-        target = Math.floor(Math.random() * 899) + 101;
-
-        started = true;
-        dispatch('starttimer');
-
-        worker?.postMessage({ numbers: numbers.map(x => x.value), target });
-    }
-
-    function generateDaily () {
-        const c = Math.floor(Math.random() * 5);
-        shuffleList(Array(6).fill(true, 0, c).fill(false, c)).forEach(x => generateNumber(x));
-        generateTarget();
-    }
-
-    function selectSquare (n) {
-        if (solved) return;
-        if (n.selected || !n.valid) return;
-        
-        if (steps.length === 0 || steps.at(-1).r) steps = steps.concat({ a: null, b: null, o: null, r: null });
-
-        if (!steps.at(-1).a) steps.at(-1).a = n;
-        else if (!steps.at(-1).b) steps.at(-1).b = n;
-        else return;
-        
-        n.selected = true;
-        numbers = numbers;
-        steps = steps;
-    }
-
-    function deselectSquare (n) {
-        if (solved) return;
-
-        n.selected = false;
-        
-        const i = steps.findIndex(x => x.a === n || x.b === n);
-
-        if (steps[i].a === n) steps[i].a = null;
-        if (steps[i].b === n) steps[i].b = null;
-        if (!steps[i].a && !steps[i].b) steps[i].o = null;
-        
-        for (let j = steps.length - 1; j > i; j--) {
-            const step = steps[j];
-            if (step.a?.selected) step.a.selected = false;
-            if (step.b?.selected) step.b.selected = false;
+        else if (o === '\u00d7') {
+          if (x.value === 1) x.valid = false;
         }
-
-        numbers = numbers;
-        steps = steps.slice(0, i + +Object.values(steps[i]).some(x => x));
-    }
-
-    function selectOperation (op) {
-        if (solved) return;
-        if (steps?.[4]?.r) return;
-
-        let lastStep = steps.at(-1);
-        if (!lastStep) return;
-
-        if (Object.values(lastStep).every(x => x)) {
-            selectSquare(lastStep.r);
-            lastStep = steps.at(-1);
-        } else if (lastStep.o) return;
-
-        const [a, b] = [lastStep.a?.value, lastStep.b?.value];
-
-        switch (op) {
-            case '\u2212':
-                if (a === 1 || a <= b || a === b * 2) return;
-                break;
-            case '\u00d7':
-                if (a === 1 || b === 1) return;
-                break;
-            case '\u00f7':
-                if (a === 1 || b === 1 || a % b || a === b ** 2 ) return;
-                break;
+        else if (o === '\u00f7') {
+          if (x.value === 1) x.valid = false;
+          else if (a && (a.value % x.value !== 0 || a.value === x.value ** 2)) x.valid = false;
+          else if (b && (x.value % b.value !== 0 || x.value === b.value ** 2)) x.valid = false;
         }
-
-        lastStep.o = op;
-        steps = steps;
+      }
     }
+  });
 
-    function removeOperation (i) {
-        if (solved) return;
+  let invalidOps = $state({
+    '\u002b': true,
+    '\u2212': true,
+    '\u00d7': true,
+    '\u00f7': true
+  });
 
-        steps[i].o = null;
+  // mark invalid operations
+  $effect(() => {
+    if (target === undefined || steps.length === 0 || solved || $done || ((steps.at(-1).a !== null) !== (steps.at(-1).b !== null) && steps.at(-1).o) || (steps.length === 5 && steps.at(-1).c)) {
+      invalidOps['\u002b'] = true;
+      invalidOps['\u2212'] = true;
+      invalidOps['\u00d7'] = true;
+      invalidOps['\u00f7'] = true;
+    } else {
+      invalidOps['\u002b'] = false;
+      invalidOps['\u2212'] = false;
+      invalidOps['\u00d7'] = false;
+      invalidOps['\u00f7'] = false;
 
-        for (let j = steps.length - 1; j > i; j--) {
-            const step = steps[j];
-            if (step.a?.selected) step.a.selected = false;
-            if (step.b?.selected) step.b.selected = false;
-        }
+      if (steps.at(-1)?.a && steps.at(-1)?.b && !steps.at(-1)?.c) {
+        const a = steps.at(-1).a.value;
+        const b = steps.at(-1).b.value;
 
-        numbers = numbers;
-        steps = steps.slice(0, i + +Object.values(steps[i]).some(x => x));
+        invalidOps['\u2212'] = a <= b || a === b * 2;
+        invalidOps['\u00d7'] = a === 1 || b === 1;
+        invalidOps['\u00f7'] = b === 1 || a % b !== 0 || a === b * b;
+      }
+      else if (steps.at(-1)?.c) {
+        const c = steps.at(-1).c.value;
+        const x = numbers.filter(y => !y.used).concat(steps.filter(y => y !== steps.at(-1) && y.c && !y.c.used).map(y => y.c)).map(y => y.value);
+
+        invalidOps['\u2212'] = x.every(y => c <= y || c === y * 2);
+        invalidOps['\u00d7'] = x.every(y => c === 1 || y === 1);
+        invalidOps['\u00f7'] = x.every(y => y === 1 || c % y !== 0 || c === y ** 2);
+      }
     }
+  });
 
-    function removeStep (i) {
-        if (solved) return;
-
-        for (let j = steps.length - 1; j >= i; j--) {
-            const step = steps[j];
-            if (step.a?.selected) step.a.selected = false;
-            if (step.b?.selected) step.b.selected = false;
-        }
-
-        numbers = numbers;
-        steps = steps.slice(0, i);
-    }
-
-    function checkValid (num, op, { a = null, b = null }) {
-        if (a) {
-            switch (op) {
-                case '\u2212': return a > num && a !== 2 * num;
-                case '\u00d7': return num !== 1;
-                case '\u00f7': return num !== 1 && !(a % num) && a !== num * num;
-            }
-        }
-            
-        switch (op) {
-            case '\u2212': return num > b && num !== 2 * b;
-            case '\u00d7': return num !== 1;
-            case '\u00f7': return b !== 1 && !(num % b) && num !== b * b;
-        }
-
-        return true;
-    }
-
-    $: {
-        for (const step of steps) {
-            if (step.a && step.o && step.b && !step.r) {
-                const [a, o, b] = [step.a.value, step.o, step.b.value];
-                const value = o === '\u002b' ? a + b : o === '\u2212' ? a - b : o === '\u00d7' ? a * b : o === '\u00f7' ? a / b : null;
-                if (value) step.r = { value, selected: false, valid: true };
-            } else if ((!step.a || !step.o || !step.b) && step.r) step.r = null;
-        }
-    }
-
-    $: {
-        let lastStep = steps.at(-1);
-
-        if (lastStep?.o && (!lastStep.a !== !lastStep.b)) {
-            for (let n of numbers) {
-                if (!n.selected) n.valid = checkValid(n.value, lastStep.o, { a: lastStep.a?.value, b: lastStep.b?.value });
-            }
-            for (let s of steps) {
-                if (s.r?.selected === false) s.r.valid = checkValid(s.r.value, lastStep.o, { a: lastStep.a?.value, b: lastStep.b?.value });
-            }
-        } else {
-            for (let n of numbers) {
-                if (!n.selected) n.valid = true;
-            }
-            for (let s of steps) {
-                if (s.r?.selected === false) s.r.valid = true;
-            }
-        }
-
-        numbers = numbers;
-        steps = steps;
-    }
-
-    // ==========#==========#==========#========== //
-
-    let worker;
-    let results = null;
-    let sampleSolution = null;
-
-    function getSampleSolution () {
-        sampleSolution = results.solutions[Math.floor(Math.random() * results.solutions.length)];
-    }
-
-    // ==========#==========#==========#========== //
-
-    onMount(() => {
-        const d = getDaily('numbers');
-
-        if (daily && d) {
-            generateDaily();
-
-            for (let x of d.input) {
-                steps = steps.concat({
-                    a: numbers[x[0]] ?? steps[x[0] - 6]?.r ?? null,
-                    o: x[1],
-                    b: numbers[x[2]] ?? steps[x[2] - 6]?.r ?? null
-                });
-
-                const a = steps.at(-1).a?.value;
-                const o = steps.at(-1).o;
-                const b = steps.at(-1).b?.value;
-
-                if (a && b) steps.at(-1).r = {
-                    value: o === '\u002b' ? a + b : o === '\u2212' ? a - b : o === '\u00d7' ? a * b : o === '\u00f7' ? a / b : null,
-                    selected: false
-                };
-
-                if (a) steps.at(-1).a.selected = true;
-                if (b) steps.at(-1).b.selected = true;
-            }
-
-            results = d.results;
-            dispatch('draintimer');
-
-            return;
-        }
-
-        worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
-        worker.addEventListener('message', e => results = e.data);
-    });
+  // determine if solved
+  let solved = $derived(steps.at(-1)?.c?.value === target);
 </script>
 
-<svelte:window
-    on:keydown={ e => {
-        if (!started || timerDone) return;
-        if (!$settings['numbersShortcuts']) return;
+<div class="game" inert={ !$running || solved }>
+  <Target value={ target } />
 
-        const k = e.key.toLowerCase();
-
-        const squares = ['q', 'w', 'e', 'r', 't', 'y'];
-        const intermediates = ['a', 's', 'd', 'f'];
-        const operations = { '+': '\u002b', '-': '\u2212', '*': '\u00d7', 'x': '\u00d7', '/': '\u00f7' };
-
-        if (squares.includes(k)) selectSquare(numbers[squares.indexOf(k)]);
-        if (intermediates.includes(k)) {
-            const n = steps[intermediates.indexOf(k)];
-            if (n?.r) selectSquare(n.r);
-        }
-        if (k in operations) selectOperation(operations[k]);
-        if (k === 'backspace') {
-            const lastStep = steps.at(-1);
-            if (!lastStep) return;
-
-            if (lastStep.b) deselectSquare(lastStep.b);
-            else if (lastStep.o) removeOperation(steps.length - 1);
-            else if (lastStep.a) deselectSquare(lastStep.a);
-        }
-        if (k === 'delete' && steps.length > 0) {
-            if (e.shiftKey) removeStep(0);
-            else removeStep(steps.length - 1);
-        }
-    } }
-/>
-
-<div class="wrapper">
-    <NumbersTarget value={ target } />
-
-    <div class="input-wrapper" inert={ !started || solved || timerDone }>
-        <NumbersSquares { numbers }
-            on:selectsquare={ e => selectSquare(e.detail) }
-        />
-        
-        <NumbersSteps { steps } { target } alt={ $settings['alternateOperations'] } bind:solved { timerDone }
-            on:selectsquare={ e => selectSquare(e.detail) }
-            on:deselectsquare={ e => deselectSquare(e.detail) }
-            on:selectoperation={ e => selectOperation(e.detail) }
-            on:removeoperation={ e => removeOperation(e.detail) }
-            on:removestep={ e => removeStep(e.detail) }
-        />
+  <div class="board">
+    <div class="left">
+      <NumberSelection { numbers }
+        on:selectnumber={ e => selectNumber(e.detail) }
+      />
     </div>
 
-    <span class="buttons">
-        { #if !started && !daily && numbers.length < 6 }
-            <span in:flipTransition out:flipTransition>
-                <button on:click={ () => generateNumber(false) }>SMALL</button>
-                <button on:click={ () => generateNumber(true) } disabled={ !largeNumbers.length }>LARGE</button>
-            </span>
-        { :else if !started && !daily && !target }
-            <span in:flipTransition out:flipTransition>
-                <button on:click={ generateTarget }>GET TARGET</button>
-            </span>
-        { :else if !started && daily }
-            <span in:flipTransition out:flipTransition>
-                <button on:click={ generateDaily }>SHOW TODAY&CloseCurlyQuote;S NUMBERS</button>
-            </span>
-        { :else if timerDone }
-            <span in:flipTransition out:flipTransition>
-                <button on:click={ getSampleSolution } disabled={ !results }>{ results ? 'SHOW A SOLUTION' : 'SOLVING\u2026' }</button>
-                
-                { #if !daily }
-                    <button on:click={ () => dispatch('gamereset') }>RESET</button>
-                { /if }
-            </span>
-        { /if }
-    </span>
-    
-    { #if sampleSolution }
-        <p style:margin=0 style:text-align="center" style:display="flex" style:flex-direction="column" style:gap="0.25rem">
-            <span><b>{ results.diff ? `${sampleSolution.steps} = ${sampleSolution.value}` : sampleSolution.steps }</b></span>
-            <svelte:element this={ results.diff ? 'span' : null }>({ results.diff } away)</svelte:element>
-            <i style:font-size="smaller">({ results.solutions.length } solution{ results.solutions.length === 1 ? '' : 's' } found)</i>
-        </p>
-    { /if }
+    <div class="right">
+      <Steps bind:steps={ steps } { solved }
+        on:selectnumber={ e => selectNumber(e.detail) }
+        on:removenumber={ e => removeNumber(...e.detail) }
+        on:removeoperation={ e => removeOperation(e.detail) }
+        on:removerow={ e => removeRow(e.detail) }
+      />
+
+      <OperationPanel on:selectoperation={ e => selectOperation(e.detail) } { invalidOps } />
+    </div>
+  </div>
 </div>
 
+<div class="buttons">
+  { #if $done }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button on:click={ () => showSolution() } disabled={ !solutions }>{ solutions ? 'SHOW A SOLUTION' : 'SOLVING\u0133' }</button>
+      <button on:click={ () => resetGame() }>RESET</button>
+    </div>
+  { :else if numbers.length < 6 }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button on:click={ () => pickNumber() }>SMALL</button>
+      <button on:click={ () => pickNumber(true) } disabled={ largeBin.length === 0 }>LARGE</button>
+    </div>
+  { :else if target === undefined }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button on:click={ () => pickTarget() }>GENERATE TARGET</button>
+    </div>
+  { /if }
+</div>
+
+{ #if sampleSolution }
+  <div class="solution" transition:fade={ { duration: 150, easing: cssEaseIn } }>
+    <span class="a">{ solutions.diff === 0 ? sampleSolution.steps : `${sampleSolution.steps} = ${sampleSolution.value}` }</span>
+    { #if solutions.diff !== 0 }
+      <span class="b">({ solutions.diff } away)</span>
+    { /if }
+    <span class="c">({ solutions.solutions.length } solution{ solutions.solutions.length === 1 ? '' : 's' } found)</span>
+  </div>
+{ /if }
+
 <style>
-    .wrapper {
-        width: 100%;
-        height: min-content;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-    }
+  .game, .board {
+    display: flex;
+    gap: 1rem;
+  }
 
-    .input-wrapper {
-        display: grid;
-        grid-template-columns: 3rem 19rem;
-        grid-template-rows: auto;
-        gap: 1rem;
-    }
+  .game {
+    flex-direction: column;
+  }
 
-    .buttons {
-        width: 100%;
-        height: max-content;
-        display: grid;
-        grid-template-rows: 100%;
-        grid-template-columns: 100%;
-        justify-items: center;
-    }
+  .right {
+    width: calc(5 * 3rem + 5 * 0.5rem + 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 
-    .buttons > span {
-        grid-area: 1 / 1 / 2 / 2;
-        display: flex;
-        gap: 0.5rem;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-    }
+  .buttons {
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 100%;
+    align-items: center;
+    justify-items: center;
+  }
 
-    .buttons button {
-        padding: 0.5rem 0.7rem;
-        border: 1px solid currentColor;
-        border-radius: 0.75rem;
-        color: var(--theme-color);
-        font-weight: bold;
-        transition-property: background, color, filter, opacity, border;
-        transition-duration: 0.15s;
-    }
-    
-    @media (hover: hover) {
-        .buttons button:hover {
-            border: 1px solid var(--theme-color);
-            background: var(--theme-color);
-            color: white;
-        }
-    }
-    
-    .buttons button:focus {
-        border: 1px solid var(--theme-color);
-        background: var(--theme-color);
-        color: white;
-        outline: 1px solid var(--theme-color);
-        outline-offset: 0.125rem;
-    }
+  .buttons .wrapper {
+    display: flex;
+    gap: 0.5rem;
+    grid-area: 1 / 1 / 2 / 2;
+    backface-visibility: hidden;
+  }
 
-    .buttons button:disabled {
-        filter: grayscale(1);
-        opacity: 0.5;
-        pointer-events: none;
-    }
+  .buttons button {
+    padding: 0.4rem 0.6rem;
+    border: 0.075rem solid var(--theme-color);
+    border-radius: 0.6rem;
+    font-weight: bold;
+    color: var(--theme-color);
+    transition-property: background, filter, opacity;
+    transition-duration: 0.15s;
+  }
+
+  .buttons button:hover {
+    background: var(--theme-color-light);
+  }
+
+  .buttons button:disabled {
+    filter: grayscale(1);
+    opacity: 0.5;
+  }
+
+  .solution {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .solution .a {
+    font-weight: bold;
+  }
+
+  .solution .c {
+    font-size: 80%;
+    font-style: italic;
+  }
 </style>

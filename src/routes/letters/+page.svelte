@@ -2,8 +2,8 @@
   import { setContext } from 'svelte';
   import { writable } from 'svelte/store';
 
-  import Timer from '$lib/components_2024/Timer.svelte';
-  import Numbers from '$lib/components_2024/numbers/Numbers.svelte';
+  import Timer from '$lib/components/Timer.svelte';
+  import Letters from '$lib/components/letters/Letters.svelte';
 
   let timer = $state();
 
@@ -30,7 +30,7 @@
 
 <Timer duration={ 30 } bind:this={ timer } />
 
-<Numbers
+<Letters
   on:startgame={ () => startGame() }
   on:resetgame={ () => resetGame() }
 />

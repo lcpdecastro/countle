@@ -1,11 +1,6 @@
 @import url('./colar.css');
 
 :root {
-    --blue: #3167fa;
-    --green: #0ed100;
-    --red: #fa3838;
-    --yellow: #eba70c;
-    
     font-size: min(1rem, 4vw);
     touch-action: manipulation;
 }

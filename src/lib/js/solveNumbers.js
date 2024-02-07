@@ -1,154 +1,188 @@
-class Number {
-    constructor (value, steps = null) {
-        this.value = value;
-        this.steps = steps ?? [this];
-    }
+class N {
+  constructor (value, steps = []) {
+    this.value = value;
+    this.steps = steps;
+  }
 
-    get stepString () {
-        if (this.steps.length === 1) return `${this.value}`;
-        return `(${this.steps.map(x => x?.stepString ?? x).join(" ")})`;
+  static sort (a, b) {
+    if (a.steps.length > 0 && b.steps.length > 0) {
+      if (a.steps.length === b.steps.length) return N.sort(a.steps[0], b.steps[0]);
+      return a.steps.length - b.steps.length;
     }
-}
+    if (a.steps.length > 0) return 1;
+    if (b.steps.length > 0) return -1;
+    if (a.steps.length === 0 && b.steps.length === 0) return a.value - b.value;
+  }
 
-function sorter (a, b) {
-    if (typeof a === 'string' && typeof b === 'string') {
-        const s = '+-*/'.indexOf(a) - '+-*/'.indexOf(b);
-        if (s) return s;
-    }
+  static combine (a, b, o) {
+    const inv = { '+': '-', '-': '+', '*': '/', '/': '*' };
 
-    if (a.steps.length === 1 && b.steps.length === 1) return a.value - b.value;
+    const newValue = (
+      o === '+' ? a.value + b.value :
+      o === '-' ? a.value - b.value :
+      o === '*' ? a.value * b.value :
+      o === '/' ? a.value / b.value :
+      undefined
+    );
+
+    const op1 = [];
+    const op2 = [];
+
+    if (a.steps.length === 0 || ![o, inv[o]].includes(a.steps.find(x => typeof x === 'string'))) op1.push(a);
     else {
-        if (a.steps.length !== b.steps.length) return a.steps.length - b.steps.length;
+      for (let i = 0; i < a.steps.length; i += 2) {
+        const w = a.steps[i - 1];
+        const x = a.steps[i];
+
+        if (i === 0) op1.push(x);
         else {
-            for (let i = 0; i < a.steps.length; i += 2) {
-                const s = sorter(a.steps[i], b.steps[i]);
-                if (s) return s;
-            }
+          if (w === '+' || w === '*') op1.push(x);
+          else op2.push(x);
         }
+      }
     }
 
-    return 0;
-}
+    if (b.steps.length === 0 || ![o, inv[o]].includes(b.steps.find(x => typeof x === 'string'))) {
+      if (o === '+' || o === '*') op1.push(b);
+      else op2.push(b);
+    } else {
+      for (let i = 0; i < b.steps.length; i += 2) {
+        const w = b.steps[i - 1];
+        const x = b.steps[i];
 
-function collapse (a, b, op) {
-    const check = '+-'.includes(op) ? '+-' : '*/';
-
-    const o = [];
-    const p = [];
-
-    if (check.includes(a.steps[1])) {
-        o.push(a.steps[0]);
-
-        for (let i = 2; i < a.steps.length; i += 2) {
-            if ('+*'.includes(a.steps[i - 1])) o.push(a.steps[i]);
-            else p.push(a.steps[i]);
+        if (i === 0) {
+          if (o === '+' || o === '*') op1.push(x);
+          else op2.push(x);
+        } else {
+          if (o === '+' || o === '*') {
+            if (w === '+' || w === '*') op1.push(x);
+            else op2.push(x);
+          } else {
+            if (w === '+' || w === '*') op2.push(x);
+            else op1.push(x);
+          }
         }
+      }
     }
-    else o.push(a);
 
-    const inv = '-/'.includes(op);
-
-    if (check.includes(b.steps[1])) {
-        if (inv) p.push(b.steps[0]);
-        else o.push(b.steps[0]);
-
-        for (let i = 2; i < b.steps.length; i += 2) {
-            if ('+*'.includes(b.steps[i - 1])) {
-                if (inv) p.push(b.steps[i]);
-                else o.push(b.steps[i]);
-            }
-            else if (inv) o.push(b.steps[i]);
-            else p.push(b.steps[i]);
-        }
+    const steps = [];
+    for (let x of op1.sort(N.sort)) {
+      steps.push((o === '+' || o === '*') ? o : inv[o]);
+      steps.push(x);
     }
-    else if (inv) p.push(b);
-    else o.push(b);
+    for (let x of op2.sort(N.sort)) {
+      steps.push((o === '+' || o === '*') ? inv[o] : o);
+      steps.push(x);
+    }
 
-    o.sort(sorter);
-    p.sort(sorter);
+    return new N(newValue, steps.slice(1));
+  }
 
-    return { o, p };
+  toString (parentheses = false) {
+    if (this.steps.length === 0) return `${this.value}`;
+
+    let out = this.steps.map(x => {
+      if (x instanceof N) return x.toString(true);
+      if (x === '-') return '\u2212';
+      if (x === '*') return '\u00d7';
+      if (x === '/') return '\u00f7';
+      return x;
+    }).join(' ');
+    if (parentheses) return `(${out})`;
+    return out;
+  }
+
+  get isRepetitive () {
+    return this.steps.flat(Infinity).filter(x => x instanceof N).some(x => x.value === this.value);
+  }
 }
 
 function* helper (numbers) {
-    if (numbers.length === 1) return;
+  for (let i = 0; i < numbers.length; i++) {
+    for (let j = i + 1; j < numbers.length; j++) {
+      const a = numbers[i];
+      const b = numbers[j];
+      const filtered = numbers.filter((_, n) => n !== i && n !== j);
 
-    for (let i = 0; i < numbers.length; i++) {
-        for (let j = 0; j < numbers.length; j++) {
-            if (i === j) continue;
-
-            const a = numbers[i];
-            const b = numbers[j];
-            const r = numbers.filter((_, n) => n !== i && n !== j);
-
-            if (i > j) {
-                let { o, p } = collapse(a, b, '+');
-                let n = new Number(a.value + b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['+', y]), [])).concat(p.reduce((x, y) => x.concat(['-', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
-            
-            if (a.value > b.value && a.value !== b.value * 2) {
-                let { o, p } = collapse(a, b, '-');
-                let n = new Number(a.value - b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['+', y]), [])).concat(p.reduce((x, y) => x.concat(['-', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
-            
-            if (i > j && a.value !== 1 && b.value !== 1) {
-                let { o, p } = collapse(a, b, '*');
-                let n = new Number(a.value * b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['*', y]), [])).concat(p.reduce((x, y) => x.concat(['/', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
-            
-            if (!(a.value % b.value) && b.value !== 1 && a.value !== b.value ** 2) {
-                let { o, p } = collapse(a, b, '/');
-                let n = new Number(a.value / b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['*', y]), [])).concat(p.reduce((x, y) => x.concat(['/', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
+      // a + b
+      {
+        const toAdd = N.combine(a, b, '+');
+        if (!toAdd.isRepetitive) {
+          yield toAdd;
+          yield* helper(filtered.concat(toAdd));
         }
+      }
+
+      // a - b
+      if (a.value > b.value && a.value !== b.value * 2) {
+        const toAdd = N.combine(a, b, '-');
+        if (!toAdd.isRepetitive) {
+          yield toAdd;
+          yield* helper(filtered.concat(toAdd));
+        }
+      }
+
+      // b - a
+      if (b.value > a.value && b.value !== a.value * 2) {
+        const toAdd = N.combine(b, a, '-');
+        if (!toAdd.isRepetitive) {
+          yield toAdd;
+          yield* helper(filtered.concat(toAdd));
+        }
+      }
+
+      // a * b
+      if (a.value !== 1 && b.value !== 1) {
+        const toAdd = N.combine(a, b, '*');
+        if (!toAdd.isRepetitive) {
+          yield toAdd;
+          yield* helper(filtered.concat(toAdd));
+        }
+      }
+
+      // a / b
+      if (a.value > b.value && b.value !== 1 && a.value % b.value === 0 && a.value !== b.value * b.value) {
+        const toAdd = N.combine(a, b, '/');
+        if (!toAdd.isRepetitive) {
+          yield toAdd;
+          yield* helper(filtered.concat(toAdd));
+        }
+      }
+
+      // b / a
+      if (b.value > a.value && a.value !== 1 && b.value % a.value === 0 && b.value !== a.value * a.value) {
+        const toAdd = N.combine(b, a, '/');
+        if (!toAdd.isRepetitive) {
+          yield toAdd;
+          yield* helper(filtered.concat(toAdd));
+        }
+      }
     }
+  }
 }
 
 function solve (numbers, target) {
-    const g = helper(numbers.map(x => new Number(x)));
-    const memo = new Set();
+  const solutions = [];
+  const solutionSet = new Set();
+  let diff = Infinity;
 
-    let solutions = [];
-    let diff = Infinity;
+  for (let solution of helper(numbers.map(x => new N(x)))) {
+    if (solutionSet.has(solution.toString())) continue;
 
-    while (true) {
-        const n = g.next();
-        if (n.done) break;
+    const d = Math.abs(solution.value - target);
+    if (d <= diff) {
+      if (d < diff) {
+        solutions.length = 0;
+        solutionSet.clear();
+        diff = d;
+      }
 
-        const v = n.value.at(-1);
-        const vs = v.stepString.slice(1, -1);
-
-        let d = Math.abs(v.value - target);
-        if (d <= diff) {
-            if (memo.has(vs)) continue;
-
-            memo.add(vs);
-
-            if (d < diff) {
-                solutions = [];
-                diff = d;
-            }
-
-            solutions.push({
-                value: v.value,
-                steps: vs.replaceAll('-', '\u2212').replaceAll('*', '\u00d7').replaceAll('/', '\u00f7')
-            });
-        }
+      solutions.push({ value: solution.value, steps: solution.toString() });
+      solutionSet.add(solution.toString());
     }
+  }
 
-    return { diff, solutions };
+  return { solutions, diff };
 }
 
 export default solve;
