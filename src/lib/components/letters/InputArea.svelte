@@ -1,12 +1,14 @@
 <script>
-  import { createEventDispatcher } from "svelte";
+  import { createEventDispatcher, getContext } from "svelte";
 
   import dictionary from '$lib/js/dictionary.js';
 
-  import Backspace from "phosphor-svelte/lib/Backspace";
-  import Trash from "phosphor-svelte/lib/Trash";
+  import Backspace from "lucide-svelte/icons/delete";
+  import Trash from "lucide-svelte/icons/trash-2";
 
   const dispatch = createEventDispatcher();
+
+  const running = getContext('running');
 
   let { value = [] } = $props();
 
@@ -18,11 +20,11 @@
     { word || '\u00a0' }
   </div>
 
-  <button class="backspace" on:click={ () => dispatch('removeletter') }>
-    <Backspace size="1.5rem" color="var(--theme-color)"/>
+  <button class="icon-btn backspace" disabled={ !$running } on:click={ () => dispatch('removeletter') }>
+    <Backspace strokeWidth="0.075rem" size="100%" color="var(--theme-color)" />
   </button>
-  <button class="delete" on:click={ () => dispatch('clearword') }>
-    <Trash size="1.5rem" color="var(--colar-red-6)" />
+  <button class="icon-btn delete" disabled={ !$running } on:click={ () => dispatch('clearword') }>
+    <Trash strokeWidth="0.075rem" size="100%" color="var(--colar-red-6)" />
   </button>
 </div>
 
@@ -63,12 +65,7 @@
     color: var(--colar-red-6);
   }
 
-  button {
-    width: 1.5rem;
-    height: 1.5rem;
-    padding: 0;
-    flex-grow: 0;
-    justify-self: end;
+  .icon-btn {
     align-self: center;
   }
 </style>

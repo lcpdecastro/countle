@@ -1,7 +1,11 @@
 <script>
+  import shuffleList from 'shuffle-list';
+  import seed from 'seed-random';
+  import dayjs from 'dayjs';
+
   import { createEventDispatcher, getContext } from 'svelte';
   import { fade } from 'svelte/transition';
-  import shuffleList from 'shuffle-list';
+  import { page } from '$app/stores';
 
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
@@ -13,6 +17,9 @@
 
   const running = getContext('running');
   const done = getContext('done');
+
+  let daily = $page.url.pathname.includes('daily');
+  if (daily) seed(dayjs().format('YYYY-MM-DD'), { global: true });
 
   class L {
     used = $state(false);
@@ -74,6 +81,26 @@
 
     dispatch('resetgame');
   }
+
+  function getDaily () {
+    const v = Math.floor(Math.random() * 3) + 3;
+    const s = shuffleList(Array(v).fill(true).concat(Array(9 - v).fill(false)));
+    for (let x of s) pickLetter(x);
+  }
+
+  export function getGameState () {
+    return {
+      letters: letters.map(x => x.value),
+      input: input.map(x => letters.indexOf(x)),
+      solutions: solutions
+    };
+  }
+
+  export function applyGameState (gameState) {
+    for (let x of gameState.letters) letters.push(new L(x));
+    for (let x of gameState.input) selectLetter(letters[x]);
+    solutions = gameState.solutions;
+  }
 </script>
 
 <svelte:window on:keydown={ e => {
@@ -101,13 +128,19 @@
 <div class="buttons">
   { #if $done }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button on:click={ () => showSolutions = true } disabled={ !solutions }>{ solutions ? 'SHOW LONGEST WORDS' : 'SOLVING\u0133' }</button>
-      <button on:click={ () => resetGame() }>RESET</button>
+      <button class="text-btn" on:click={ () => showSolutions = true } disabled={ !solutions }>{ solutions ? 'SHOW LONGEST WORDS' : 'SOLVING\u0133' }</button>
+      { #if !daily }
+        <button class="text-btn" on:click={ resetGame }>RESET</button>
+      { /if }
+    </div>
+  { :else if daily && letters.length === 0 }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button class="text-btn" on:click={ getDaily }>SHOW TODAY'S LETTERS</button>
     </div>
   { :else if letters.length < 9 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button on:click={ () => pickLetter(true) } disabled={ letters.filter(x => 'AEIOU'.includes(x.value)).length === 5 }>VOWEL</button>
-      <button on:click={ () => pickLetter() } disabled={ letters.filter(x => !'AEIOU'.includes(x.value)).length === 6 }>CONSONANT</button>
+      <button class="text-btn" on:click={ () => pickLetter(true) } disabled={ letters.filter(x => 'AEIOU'.includes(x.value)).length === 5 }>VOWEL</button>
+      <button class="text-btn" on:click={ () => pickLetter() } disabled={ letters.filter(x => !'AEIOU'.includes(x.value)).length === 6 }>CONSONANT</button>
     </div>
   { /if }
 </div>
@@ -144,25 +177,6 @@
     gap: 0.5rem;
     grid-area: 1 / 1 / 2 / 2;
     backface-visibility: hidden;
-  }
-
-  .buttons button {
-    padding: 0.4rem 0.6rem;
-    border: 0.075rem solid var(--theme-color);
-    border-radius: 0.6rem;
-    font-weight: bold;
-    color: var(--theme-color);
-    transition-property: background, filter, opacity;
-    transition-duration: 0.15s;
-  }
-
-  .buttons button:hover {
-    background: var(--theme-color-light);
-  }
-
-  .buttons button:disabled {
-    filter: grayscale(1);
-    opacity: 0.5;
   }
 
   .solution {

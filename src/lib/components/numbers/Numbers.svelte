@@ -1,7 +1,11 @@
 <script>
-  import { createEventDispatcher, getContext } from 'svelte';
-  import { fade } from 'svelte/transition';
   import shuffleList from 'shuffle-list';
+  import seed from 'seed-random';
+  import dayjs from 'dayjs';
+
+  import { createEventDispatcher, getContext, tick } from 'svelte';
+  import { fade } from 'svelte/transition';
+  import { page } from '$app/stores';
 
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
@@ -15,6 +19,9 @@
 
   const running = getContext('running');
   const done = getContext('done');
+
+  let daily = $page.url.pathname.includes('daily');
+  if (daily) seed(dayjs().format('YYYY-MM-DD'), { global: true });
 
   class N {
     used = $state(false);
@@ -214,6 +221,69 @@
 
   // determine if solved
   let solved = $derived(steps.at(-1)?.c?.value === target);
+
+  async function getDaily () {
+    const l = Math.floor(Math.random() * 5);
+    const s = shuffleList(Array(l).fill(true).concat(Array(6 - l).fill(false)));
+    for (let x of s) pickNumber(x);
+
+    await tick();
+    
+    pickTarget();
+  }
+
+  export function getGameState () {
+    const squares = numbers.concat(steps.filter(x => x.c).map(x => x.c));
+    const stepsAdj = steps.map(s => [squares.indexOf(s.a), s.o, squares.indexOf(s.b)]);
+
+    return {
+      numbers: numbers.map(x => x.value),
+      target,
+      steps: stepsAdj,
+      solutions: solutions
+    };
+  }
+
+  export function applyGameState (gameState) {
+    for (let x of gameState.numbers) numbers.push(new N(x));
+    target = gameState.target;
+
+    for (let s of gameState.steps) {
+      const step = {
+        a: null,
+        o: null,
+        b: null,
+        c: null
+      };
+
+      if (s[0] > -1) {
+        step.a = s[0] < 6 ? numbers[s[0]] : steps[s[0] - 6].c;
+        step.a.used = true;
+      }
+      if (s[1]) step.o = s[1];
+      if (s[2] > -1) {
+        step.b = s[2] < 6 ? numbers[s[2]] : steps[s[2] - 6].c;
+        step.b.used = true;
+      }
+      if (step.a && step.o && step.b) step.c = new N(
+        step.o === '\u002b' ? step.a.value + step.b.value :
+        step.o === '\u2212' ? step.a.value - step.b.value :
+        step.o === '\u00d7' ? step.a.value * step.b.value :
+        step.o === '\u00f7' ? step.a.value / step.b.value :
+        undefined
+      );
+
+      steps.push(step);
+    }
+
+    if (gameState?.solutions) solutions = gameState.solutions;
+    else {
+      worker.postMessage({ numbers: numbers.map(x => x.value), target });
+      worker.addEventListener('message', e => {
+        dispatch('storesolutions', e.data);
+      }, { 'once': true });
+    }
+  }
 </script>
 
 <div class="game" inert={ !$running || solved }>
@@ -242,17 +312,23 @@
 <div class="buttons">
   { #if $done }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button on:click={ () => showSolution() } disabled={ !solutions }>{ solutions ? 'SHOW A SOLUTION' : 'SOLVING\u0133' }</button>
-      <button on:click={ () => resetGame() }>RESET</button>
+      <button class="text-btn" on:click={ showSolution } disabled={ !solutions }>{ solutions ? 'SHOW A SOLUTION' : 'SOLVING\u0133' }</button>
+      { #if !daily }
+        <button class="text-btn" on:click={ resetGame }>RESET</button>
+      { /if }
+    </div>
+  { :else if daily && target === undefined }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button class="text-btn" on:click={ getDaily }>SHOW TODAY'S NUMBERS</button>
     </div>
   { :else if numbers.length < 6 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button on:click={ () => pickNumber() }>SMALL</button>
-      <button on:click={ () => pickNumber(true) } disabled={ largeBin.length === 0 }>LARGE</button>
+      <button class="text-btn" on:click={ () => pickNumber() }>SMALL</button>
+      <button class="text-btn" on:click={ () => pickNumber(true) } disabled={ largeBin.length === 0 }>LARGE</button>
     </div>
   { :else if target === undefined }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button on:click={ () => pickTarget() }>GENERATE TARGET</button>
+      <button class="text-btn" on:click={ pickTarget }>GENERATE TARGET</button>
     </div>
   { /if }
 </div>
@@ -297,25 +373,6 @@
     gap: 0.5rem;
     grid-area: 1 / 1 / 2 / 2;
     backface-visibility: hidden;
-  }
-
-  .buttons button {
-    padding: 0.4rem 0.6rem;
-    border: 0.075rem solid var(--theme-color);
-    border-radius: 0.6rem;
-    font-weight: bold;
-    color: var(--theme-color);
-    transition-property: background, filter, opacity;
-    transition-duration: 0.15s;
-  }
-
-  .buttons button:hover {
-    background: var(--theme-color-light);
-  }
-
-  .buttons button:disabled {
-    filter: grayscale(1);
-    opacity: 0.5;
   }
 
   .solution {

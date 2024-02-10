@@ -37,7 +37,7 @@
   }
 
   .timer {
-    background: lightgray;
+    background: var(--colar-gray-3);
     overflow: hidden;
   }
 

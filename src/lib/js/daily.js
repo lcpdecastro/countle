@@ -1,39 +1,23 @@
-import { get, writable } from "svelte/store";
-import { browser } from "$app/environment";
-import dayjs from "dayjs";
+import dayjs from 'dayjs';
+import { writable } from 'svelte/store';
 
-function dailyInit () {
-    return {
-        'date': dayjs().format('YYYYMMDD'),
-        'letters': null,
-        'numbers': null
+function dailyStore () {
+  const { subscribe, set } = writable(null, () => {
+    const value = JSON.parse(localStorage.getItem('daily'));
+
+    if (value && value.date === dayjs().format('YYYY-MM-DD')) set(JSON.parse(localStorage.getItem('daily')) ?? { 'date': dayjs().format('YYYY-MM-DD') });
+    else set({ 'date': dayjs().format('YYYY-MM-DD') });
+  });
+
+  return {
+    subscribe,
+    set (x) {
+      set(x);
+      localStorage.setItem('daily', JSON.stringify(x));
     }
+  };
 }
 
-const daily = writable(browser ? JSON.parse(localStorage.getItem('daily')) : dailyInit());
+const daily = dailyStore();
 
-daily.subscribe(checkDaily);
-
-export function logDaily (x) {
-    const d = get(daily);
-
-    if (d.date === dayjs().format('YYYYMMDD')) {
-        if ('letters' in x) d.letters ??= x.letters;
-        else if ('numbers' in x) d.numbers ??= x.numbers;
-        daily.set(d);
-    } else daily.set(dailyInit());
-}
-
-export function getDaily (game) {
-    return get(daily)[game];
-}
-
-export function checkDaily (value = get(daily)) {
-    if (browser) {
-        if (value?.date !== dayjs().format('YYYYMMDD')) {
-            const v = dailyInit();
-            daily.set(v);
-            localStorage.setItem('daily', JSON.stringify(v));
-        } else localStorage.setItem('daily', JSON.stringify(value));
-    }
-}
+export default daily;

@@ -34,6 +34,7 @@
     grid-template-columns: 100%;
     align-items: center;
     justify-items: center;
+    border-radius: 30%;
     transition-property: filter, opacity;
     transition-duration: 0.15s;
   }

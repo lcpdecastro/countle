@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte';
 
-  import X from 'phosphor-svelte/lib/X';
+  import X from 'lucide-svelte/icons/x';
 
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
@@ -23,7 +23,7 @@
   <Square value={ value?.c?.value } used={ value?.c?.used } valid={ value?.c?.valid } on:click={ () => dispatch('selectnumber', value.c) } { solved } />
   
   <button on:click={ () => dispatch('removerow') }>
-    <X color="var(--colar-red-6)" size="calc(1.25rem * 0.6)" weight="bold" />
+    <X size="100%" strokeWidth="0.075rem" color="var(--colar-red-6)" />
   </button>
 </div>
 
@@ -35,7 +35,7 @@
   }
 
   button {
-    padding: 0;
+    padding: 0.05rem;
     width: 1.25rem;
     height: 1.25rem;
     display: grid;
