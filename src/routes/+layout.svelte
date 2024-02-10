@@ -13,7 +13,7 @@
 <svelte:head>
   <title>COUNTLE</title>
   <link rel="icon" href={ `/icon-192.png` } />
-  <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#eba70c' : '#3167fa' }>
+  <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#fab005' : '#4c6ef5' }>
 </svelte:head>
 
 <div class="wrapper" style:display="contents" class:daily={ $page.url.pathname.includes('daily') }>

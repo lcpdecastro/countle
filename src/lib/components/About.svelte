@@ -20,7 +20,10 @@
       Not related to the similarly named <a href="https://countle.org">countle.org</a>, which also features a daily Numbers game.
     </p>
     <p>
-      Made with <a href="https://kit.svelte.dev">SvelteKit</a>. American English dictionary from <a href="http://wordlist.aspell.net/">SCOWL and Friends</a>. Icons from <a href="https://lucide.dev">Lucide</a>.
+      Made with <a href="https://kit.svelte.dev">SvelteKit</a>.
+      American English dictionary from <a href="http://wordlist.aspell.net/">SCOWL and Friends</a>.
+      Icons from <a href="https://lucide.dev">Lucide</a>.
+      Color palette from <a href="https://github.com/fchristant/colar">Colar</a>.
     </p>
   </svelte:fragment>
 </Dialog>
