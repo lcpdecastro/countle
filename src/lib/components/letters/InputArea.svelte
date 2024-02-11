@@ -21,10 +21,10 @@
   </div>
 
   <button class="icon-btn backspace" disabled={ !$running } on:click={ () => dispatch('removeletter') }>
-    <Backspace strokeWidth="0.075rem" size="100%" color="var(--theme-color)" />
+    <Backspace strokeWidth="0.075rem" size="100%" />
   </button>
   <button class="icon-btn delete" disabled={ !$running } on:click={ () => dispatch('clearword') }>
-    <Trash strokeWidth="0.075rem" size="100%" color="var(--colar-red-6)" />
+    <Trash strokeWidth="0.075rem" size="100%" />
   </button>
 </div>
 
@@ -67,5 +67,13 @@
 
   .icon-btn {
     align-self: center;
+  }
+
+  .backspace {
+    color: var(--theme-color);
+  }
+
+  .delete {
+    color: var(--colar-red-6);
   }
 </style>

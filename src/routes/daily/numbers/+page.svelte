@@ -34,10 +34,17 @@
       if ($daily['numbers']) {
         game.applyGameState($daily['numbers']);
         $done = true;
+        timer.drain();
       }
     }
 
     dailyApplied = true;
+  });
+
+  $effect(() => {
+    return () => {
+      if ($running) $daily['numbers'] = game.getGameState();
+    };
   });
 </script>
 

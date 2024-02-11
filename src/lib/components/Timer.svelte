@@ -3,15 +3,23 @@
 
   let { duration } = $props();
 
-  const store = tweened(duration, { duration: duration * 1000 });
+  let store = tweened(duration, { duration: duration * 1000 });
 
   export async function start () {
-    return store.set(0);
+    const x = store.set(0);
+    x.then(() => console.log('hi'));
+    return x;
   }
 
   export async function reset () {
     return store.set(duration, { duration: 150 });
   }
+  
+  export async function drain () {
+    return store.set(0, { duration: 0 });
+  }
+
+  $effect(() => reset);
 </script>
 
 <div class="wrapper" class:red={ $store <= 5 }>

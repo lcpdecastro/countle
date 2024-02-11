@@ -276,7 +276,7 @@
       steps.push(step);
     }
 
-    if (gameState?.solutions) solutions = gameState.solutions;
+    if (gameState.solutions) solutions = gameState.solutions;
     else {
       worker.postMessage({ numbers: numbers.map(x => x.value), target });
       worker.addEventListener('message', e => {
@@ -284,6 +284,8 @@
       }, { 'once': true });
     }
   }
+
+  $effect(() => seed.resetGlobal);
 </script>
 
 <div class="game" inert={ !$running || solved }>

@@ -101,6 +101,8 @@
     for (let x of gameState.input) selectLetter(letters[x]);
     solutions = gameState.solutions;
   }
+
+  $effect(() => seed.resetGlobal);
 </script>
 
 <svelte:window on:keydown={ e => {
