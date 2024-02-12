@@ -1,89 +1,99 @@
 <script>
-    import dayjs from 'dayjs';
+  import dayjs from 'dayjs';
 
-    import { page } from '$app/stores';
+  import { page } from '$app/stores';
 
-    import Menu from '$lib/components/Menu.svelte';
-    import About from '$lib/components/About.svelte';
-    import Instructions from '$lib/components/Instructions.svelte';
+  import About from '$lib/components/About.svelte';
+  import Menu from '$lib/components/Menu.svelte';
+  import Instructions from '$lib/components/Instructions.svelte';
 
-    import '$lib/css/style.css';
-    
-    $: name = $page.route.id.split?.('/').filter(x => x).map(x => x[0].toUpperCase() + x.slice(1)).join(' ');
+  import '$lib/css/style.css';
 </script>
 
 <svelte:head>
-    <title>COUNTLE: { name }</title>
-    <link rel="icon" href={ `/icon-${name.toLowerCase().replace(' ', '-')}.png` } />
-    <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#eba70c' : '#3167fa' }>
+  <title>COUNTLE</title>
+  <link rel="icon" href={ `/icon-192.png` } />
+  <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#fab005' : '#4c6ef5' }>
 </svelte:head>
 
-<header style:--theme-color={ $page.url.pathname.includes('daily') ? '#eba70c' : null }>
+<div class="wrapper" style:display="contents" class:daily={ $page.url.pathname.includes('daily') }>
+  <header>
     <div>
-        <About />
-        <span>
-            <span>{ $page.route.id.split?.('/').at(-1).toUpperCase() }</span>
-            <span class="sub">{ $page.route.id.includes('daily') ? dayjs().format('YYYY.MM.DD') : 'INFINITE' }</span>
-        </span>
-        <span>
-            <Instructions />
-        </span>
-        
-        <Menu />
+      <About />
+      <span class="page-name">
+        <span class="a">{ $page.url.pathname.split?.('/').at(-1).toUpperCase() }</span>
+        <span class="b">{ $page.url.pathname.includes('daily') ? dayjs().format('YYYY.MM.DD') : 'INFINITE' }</span>
+      </span>
+      <Instructions />
+      <Menu />
     </div>
-</header>
+  </header>
 
-<main>
+  <main>
     <slot />
-</main>
+  </main>
+</div>
 
 <style>
-    :root {
-        --theme-color: var(--blue);
-    }
+  .wrapper {
+    --theme-color: var(--colar-indigo-6);
+    --theme-color-light: var(--colar-indigo-0);
+  }
+  
+  .wrapper.daily {
+    --theme-color: var(--colar-yellow-6);
+    --theme-color-light: var(--colar-yellow-0);
+  }
 
-    header {
-        width: 100%;
-        height: max-content;
-        padding: 1rem;
-        position: sticky;
-        top: 0;
-        display: grid;
-        align-items: center;
-        justify-items: center;
-        background: var(--theme-color);
-        color: white;
-        z-index: 1;
-    }
+  header {
+    width: 100%;
+    height: max-content;
+    padding: 1rem;
+    position: sticky;
+    top: 0;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    background: var(--theme-color);
+    color: white;
+    z-index: 1;
+    transition: background 0.15s;
+  }
 
-    header > div {
-        width: 23rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+  }
 
-    header > div > span {
-        display: flex;
-        flex-direction: column;
-        line-height: 1;
-    }
+  header div {
+    width: 23rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
 
-    header > div > span > .sub {
-        font-size: 75%;
-        font-weight: 500;
-        font-variant-numeric: tabular-nums;
-    }
+  .page-name {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    line-height: 1;
+  }
 
-    main {
-        width: 23rem;
-        height: min-content;
-        padding: 1rem 0;
-        margin-left: auto;
-        margin-right: auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-    }
+  .page-name .b {
+    font-size: 75%;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  main {
+    width: 23rem;
+    height: min-content;
+    padding: 1rem 0;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
 </style>

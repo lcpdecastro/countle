@@ -1,6 +1,57 @@
 <script>
-    import Game from '$lib/components/Game.svelte';
-    import Numbers from '$lib/components/numbers/Numbers.svelte';
+  import { setContext } from 'svelte';
+  import { writable } from 'svelte/store';
+
+  import daily from '$lib/js/daily.js';
+
+  import Timer from '$lib/components/Timer.svelte';
+  import Numbers from '$lib/components/numbers/Numbers.svelte';
+
+  let timer = $state();
+  let game = $state();
+
+  const running = writable(false);
+  setContext('running', running);
+  
+  const done = writable(false);
+  setContext('done', done);
+
+  function startGame () {
+    $running = true;
+
+    timer.start().then(() => {
+      $running = false;
+      $done = true;
+
+      $daily['numbers'] = game.getGameState();
+    });
+  }
+
+  let dailyApplied = $state(false);
+
+  $effect(() => {
+    if (!dailyApplied) {
+      if ($daily['numbers']) {
+        game.applyGameState($daily['numbers']);
+        $done = true;
+        timer.drain();
+      }
+    }
+
+    dailyApplied = true;
+  });
+
+  $effect(() => {
+    return () => {
+      if ($running) $daily['numbers'] = game.getGameState();
+    };
+  });
 </script>
 
-<Game game={ Numbers } --theme-color="var(--yellow)" />
+<Timer duration={ 30 } bind:this={ timer } />
+
+<Numbers
+  on:startgame={ () => startGame() }
+  on:storesolutions={ e => $daily['numbers']['solutions'] = e.detail }
+  bind:this={ game }
+/>

@@ -1,66 +1,86 @@
+@import url('./colar.css');
+
 :root {
-    --blue: #3167fa;
-    --green: #0ed100;
-    --red: #fa3838;
-    --yellow: #eba70c;
-    
-    font-size: min(1rem, 4vw);
-    touch-action: manipulation;
+  font-size: min(1rem, 4vw);
+  color: var(--colar-gray-11);
+  touch-action: manipulation;
 }
 
 * {
-    font-family: 'Work Sans', sans-serif;
-    box-sizing: border-box;
-    -webkit-user-select: none;
-    user-select: none;
+  font-family: 'Work Sans', sans-serif;
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 button {
-    appearance: none;
-    border: none;
-    background: none;
-    font: inherit;
-    color: inherit;
-    cursor: pointer;
+  padding: 0;
+  appearance: none;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
 }
 
 button:disabled {
-    cursor: initial;
-    pointer-events: none;
-}
-
-input[type=checkbox] {
-    accent-color: var(--theme-color);
-}
-
-input[type=text] {
-    appearance: none;
-    padding: 0.5rem 0.7rem;
-    border: none;
-    border-radius: 0;
-    border-bottom: 1px solid hsla(0, 0%, 0%, 0.25);
-    background: none;
-    font: inherit;
-    color: inherit;
-}
-
-input[type=text]:focus, input[type=text]:active {
-    border-bottom: 1px solid var(--theme-color);
-    outline: none;
-}
-
-input:disabled {
-    pointer-events: none;
+  cursor: initial;
+  pointer-events: none;
 }
 
 a[href] {
-    color: var(--theme-color);
+  color: var(--theme-color);
+  text-underline-offset: 0.25rem;
+}
+
+button.text-btn {
+  padding: 0.4rem 0.6rem;
+  border: 0.075rem solid currentColor;
+  border-radius: 0.6rem;
+  color: var(--theme-color);
+  font-weight: bold;
+  transition-property: background, filter, opacity;
+  transition-duration: 0.15s;
+}
+
+button.text-btn:hover, button.text-btn:focus {
+  background: var(--theme-color-light);
+}
+
+button.text-btn:focus {
+  outline: currentColor solid 0.075rem;
+  outline-offset: 0.15rem;
+}
+
+button.text-btn:disabled {
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+button.icon-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+  transition-property: filter, opacity, color;
+  transition-duration: 0.15s;
+}
+
+button.icon-btn:focus {
+  outline: currentColor solid 0.075rem;
+  outline-offset: 0.225rem;
+}
+
+button.icon-btn:disabled {
+  filter: grayscale(1);
+  opacity: 0.5;
 }

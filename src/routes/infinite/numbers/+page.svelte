@@ -1,6 +1,36 @@
 <script>
-    import Game from '$lib/components/Game.svelte';
-    import Numbers from '$lib/components/numbers/Numbers.svelte';
+  import { setContext } from 'svelte';
+  import { writable } from 'svelte/store';
+
+  import Timer from '$lib/components/Timer.svelte';
+  import Numbers from '$lib/components/numbers/Numbers.svelte';
+
+  let timer = $state();
+
+  const running = writable(false);
+  setContext('running', running);
+  
+  const done = writable(false);
+  setContext('done', done);
+
+  function startGame () {
+    $running = true;
+
+    timer.start().then(() => {
+      $running = false;
+      $done = true;
+    });
+  }
+
+  function resetGame () {
+    timer.reset()
+    $done = false;
+  }
 </script>
 
-<Game game={ Numbers } />
+<Timer duration={ 30 } bind:this={ timer } />
+
+<Numbers
+  on:startgame={ () => startGame() }
+  on:resetgame={ () => resetGame() }
+/>

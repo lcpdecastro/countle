@@ -1,149 +1,154 @@
-class Number {
-    constructor (value, steps = null) {
-        this.value = value;
-        this.steps = steps ?? [this];
+class N {
+  constructor (value, steps = []) {
+    this.value = value;
+    this.steps = steps;
+  }
+
+  static sort (a, b) {
+    if (a.steps.length > 0 && b.steps.length > 0) {
+      if (a.steps.length === b.steps.length) {
+        for (let i = 0; i < a.steps.length; i++) {
+          if (i % 2 === 0) {
+            const s = N.sort(a.steps[i], b.steps[i]);
+            if (s !== 0) return s;
+          } else {
+            const s = '+-*/'.indexOf(a.steps[i]) - '+-*/'.indexOf(b.steps[i]);
+            if (s !== 0) return s;
+          }
+        }
+      }
+      return a.steps.length - b.steps.length;
+    }
+    if (a.steps.length > 0) return 1;
+    if (b.steps.length > 0) return -1;
+    return a.value - b.value;
+  }
+
+  static combine (a, b, o) {
+    const inv = { '+': '-', '-': '+', '*': '/', '/': '*' };
+
+    let value;
+
+    if (o === '+') value = a.value + b.value;
+    if (o === '-') {
+      if (a.value <= b.value) return;
+      if (a.value === b.value * 2) return;
+      value = a.value - b.value;
+    }
+    if (o === '*') {
+      if (a.value === 1) return;
+      if (b.value === 1) return;
+      value = a.value * b.value;
+    }
+    if (o === '/') {
+      if (b.value === 1) return;
+      if (a.value % b.value !== 0) return;
+      if (a.value === b.value ** 2) return;
+      value = a.value / b.value;
     }
 
-    get stepString () {
-        if (this.steps.length === 1) return `${this.value}`;
-        return `(${this.steps.map(x => x?.stepString ?? x).join(" ")})`;
-    }
-}
+    const op1 = [];
+    const op2 = [];
 
-function sorter (a, b) {
-    if (a.steps.length === 1 && b.steps.length === 1) return a.value - b.value;
-    else {
-        if (a.steps.length !== b.steps.length) return a.steps.length - b.steps.length;
+    if ([o, inv[o]].includes(a.steps.find(x => typeof x === 'string'))) {
+      for (let i = 0; i < a.steps.length; i += 2) {
+        if (i === 0) op1.push(a.steps[i]);
         else {
-            for (let i = 0; i < a.steps.length; i += 2) {
-                const s = sorter(a.steps[i], b.steps[i]);
-                if (s) return s;
-            }
+          if ('+*'.includes(a.steps[i - 1])) op1.push(a.steps[i]);
+          else op2.push(a.steps[i]);
         }
+      }
+    } else op1.push(a);
+
+    if ([o, inv[o]].includes(b.steps.find(x => typeof x === 'string'))) {
+      for (let i = 0; i < b.steps.length; i += 2) {
+        if (i === 0) {
+          if ('+*'.includes(o)) op1.push(b.steps[i]);
+          else op2.push(b.steps[i]);
+        } else {
+          if (b.steps[i - 1] === o) op1.push(b.steps[i]);
+          else op2.push(b.steps[i]);
+        }
+      }
+    } else {
+      if ('+*'.includes(o)) op1.push(b);
+      else op2.push(b);
     }
 
-    return 0;
-}
+    const steps = [];
+    const p = '+*'.includes(o) ? o : inv[o];
+    op1.sort(N.sort).forEach(x => { steps.push(p); steps.push(x); });
+    op2.sort(N.sort).forEach(x => { steps.push(inv[p]); steps.push(x); });
+    steps.shift();
 
-function collapse (a, b, op) {
-    const check = '+-'.includes(op) ? '+-' : '*/';
+    return new N(value, steps);
+  }
 
-    const o = [];
-    const p = [];
+  toString (parentheses = false) {
+    if (this.steps.length === 0) return `${this.value}`;
 
-    if (check.includes(a.steps[1])) {
-        o.push(a.steps[0]);
-
-        for (let i = 2; i < a.steps.length; i += 2) {
-            if ('+*'.includes(a.steps[i - 1])) o.push(a.steps[i]);
-            else p.push(a.steps[i]);
-        }
-    }
-    else o.push(a);
-
-    const inv = '-/'.includes(op);
-
-    if (check.includes(b.steps[1])) {
-        if (inv) p.push(b.steps[0]);
-        else o.push(b.steps[0]);
-
-        for (let i = 2; i < b.steps.length; i += 2) {
-            if ('+*'.includes(b.steps[i - 1])) {
-                if (inv) p.push(b.steps[i]);
-                else o.push(b.steps[i]);
-            }
-            else if (inv) o.push(b.steps[i]);
-            else p.push(b.steps[i]);
-        }
-    }
-    else if (inv) p.push(b);
-    else o.push(b);
-
-    o.sort(sorter);
-    p.sort(sorter);
-
-    return { o, p };
+    const out = this.steps.map(x => {
+      if (x instanceof N) return x.toString(true);
+      if (x === '-') return '\u2212';
+      if (x === '*') return '\u00d7';
+      if (x === '/') return '\u00f7';
+      return x;
+    }).join(' ');
+    if (parentheses) return `(${out})`;
+    return out;
+  }
 }
 
 function* helper (numbers) {
-    if (numbers.length === 1) return;
+  for (let i = 0; i < numbers.length; i++) {
+    for (let j = i + 1; j < numbers.length; j++) {
+      const filtered = numbers.filter((_, n) => n !== i && n !== j);
 
-    for (let i = 0; i < numbers.length; i++) {
-        for (let j = 0; j < numbers.length; j++) {
-            if (i === j) continue;
+      for (let o of '+-*/') {
+        const combined = N.combine(numbers[i], numbers[j], o);
 
-            const a = numbers[i];
-            const b = numbers[j];
-            const r = numbers.filter((_, n) => n !== i && n !== j);
-
-            if (i > j) {
-                let { o, p } = collapse(a, b, '+');
-                let n = new Number(a.value + b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['+', y]), [])).concat(p.reduce((x, y) => x.concat(['-', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
-            
-            if (a.value > b.value && a.value !== b.value * 2) {
-                let { o, p } = collapse(a, b, '-');
-                let n = new Number(a.value - b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['+', y]), [])).concat(p.reduce((x, y) => x.concat(['-', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
-            
-            if (i > j && a.value !== 1 && b.value !== 1) {
-                let { o, p } = collapse(a, b, '*');
-                let n = new Number(a.value * b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['*', y]), [])).concat(p.reduce((x, y) => x.concat(['/', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
-            
-            if (!(a.value % b.value) && b.value !== 1 && a.value !== b.value ** 2) {
-                let { o, p } = collapse(a, b, '/');
-                let n = new Number(a.value / b.value, [o[0]].concat(o.slice(1).reduce((x, y) => x.concat(['*', y]), [])).concat(p.reduce((x, y) => x.concat(['/', y]), [])));
-                let s = r.concat(n);
-                yield s;
-                yield* helper(s);
-            }
+        if (combined) {
+          yield combined;
+          yield* helper(filtered.concat(combined));
         }
+        
+        if ('-/'.includes(o)) {
+          const combined = N.combine(numbers[j], numbers[i], o);
+  
+          if (combined) {
+            yield combined;
+            yield* helper(filtered.concat(combined));
+          }
+        }
+      }
     }
+  }
 }
 
-function solve (numbers, target) {
-    const g = helper(numbers.map(x => new Number(x)));
-    const memo = new Set();
+export default function solve (numbers, target) {
+  const solutions = [];
+  const solutionSet = new Set();
+  let diff = Infinity;
 
-    let solutions = [];
-    let diff = Infinity;
+  for (let s of helper(numbers.map(x => new N(x)))) {
+    const string = s.toString();
+    if (solutionSet.has(string)) continue;
 
-    while (true) {
-        const n = g.next();
-        if (n.done) break;
+    const d = Math.abs(s.value - target);
+    if (d <= diff) {
+      if (d < diff) {
+        solutionSet.clear();
+        solutions.length = 0;
+        diff = d;
+      }
 
-        const v = n.value.at(-1);
-        const vs = v.stepString.slice(1, -1);
-
-        let d = Math.abs(v.value - target);
-        if (d <= diff) {
-            if (memo.has(vs)) continue;
-
-            memo.add(vs);
-
-            if (d < diff) {
-                solutions = [];
-                diff = d;
-            }
-
-            solutions.push({
-                value: v.value,
-                steps: vs.replaceAll('-', '\u2212').replaceAll('*', '\u00d7').replaceAll('/', '\u00f7')
-            });
-        }
+      solutions.push({
+        value: s.value,
+        steps: string
+      });
+      solutionSet.add(string);
     }
+  }
 
-    return { diff, solutions };
+  return { solutions, diff };
 }
-
-export default solve;

@@ -1,270 +1,203 @@
 <script>
-    import { createEventDispatcher, getContext, onMount } from 'svelte';
-    import shuffleList from 'shuffle-list';
+  import shuffleList from 'shuffle-list';
+  import seed from 'seed-random';
+  import dayjs from 'dayjs';
 
-    import LettersSquares from '$lib/components/letters/LettersSquares.svelte';
-    import LettersInput from '$lib/components/letters/LettersInput.svelte';
+  import { createEventDispatcher, getContext } from 'svelte';
+  import { fade } from 'svelte/transition';
+  import { page } from '$app/stores';
 
-    import flipTransition from '$lib/js/flipTransition.js';
-    import { getDaily } from '$lib/js/daily.js';
+  import flip from '$lib/js/flipTransition.js';
+  import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-    const dispatch = createEventDispatcher();
+  import LetterSelection from './LetterSelection.svelte';
+  import InputArea from './InputArea.svelte';
 
-    // ==========#==========#==========#========== //
+  const dispatch = createEventDispatcher();
 
-    let vowels = shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split(''));
-    let consonants = shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split(''));
-    
-    let letters = [];
-    let word = [];
-    let started = false;
-    
-    let vowelSel = 0;
-    let consonantSel = 0;
-    
-    // ==========#==========#==========#========== //
+  const running = getContext('running');
+  const done = getContext('done');
 
-    const daily = getContext('daily');
-    
-    // ==========#==========#==========#========== //
+  let daily = $page.url.pathname.includes('daily');
+  if (daily) seed(dayjs().format('YYYY-MM-DD'), { global: true });
 
-    export let timerDone;
-    
-    export function reset () {
-        vowels = shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split(''));
-        consonants = shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split(''));
+  class L {
+    used = $state(false);
 
-        letters = [];
-        word = [];
-        started = false;
-
-        vowelSel = 0;
-        consonantSel = 0;
-        
-        results = null;
-        showLongest = false;
-        
-        dispatch('resettimer');
+    constructor (value) {
+      this.value = value;
     }
+  }
 
-    export function getDailyTrial () {
-        return {
-            letters: {
-                input: word.map(x => letters.indexOf(x)),
-                results
-            }
-        };
+  let vowels = $state(shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split('')));
+  let consonants = $state(shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split('')));
+
+  let letters = $state([]);
+  let input = $state([]);
+
+  let solutions = $state([]);
+  let showSolutions = $state(false);
+
+  let worker = $state();
+  $effect(() => {
+    if (!worker) {
+      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+      worker.addEventListener('message', e => solutions = e.data);
     }
+  });
 
-    // ==========#==========#==========#========== //
-
-    function generateLetter (isVowel = false) {
-        let value;
-
-        if (isVowel) {
-            value = vowels.pop();
-            vowels = vowels;
-            vowelSel++;
-        } else {
-            value = consonants.pop();
-            consonants = consonants;
-            consonantSel++;
-        }
-
-        letters = letters.concat({ value, selected: false });
-        
-        if (letters.length < 9) return;
-
-        started = true;
-        dispatch('starttimer');
-
-        worker?.postMessage({ letters: letters.map(x => x.value) });
+  function pickLetter (vowel = false) {
+    if (vowel) letters.push(new L(vowels.pop()));
+    else letters.push(new L(consonants.pop()));
+    if (letters.length === 9) {
+      dispatch('startgame');
+      worker.postMessage({ letters: letters.map(x => x.value) });
     }
+  }
 
-    function generateDaily () {
-        const c = Math.floor(Math.random() * 2) + 4;
-        shuffleList(Array(9).fill(false, 0, c).fill(true, c)).forEach(x => generateLetter(x));
-    }
+  function selectLetter (x) {
+    x.used = true;
+    input.push(x);
+  }
 
-    function selectSquare (n) {
-        if (n.selected) return;
+  function removeLetter () {
+    input.pop().used = false;
+  }
 
-        n.selected = true;
-        letters = letters;
-        word = word.concat(n);
-    }
+  function clearWord () {
+    input.forEach(x => x.used = false);
+    input.length = 0;
+  }
 
-    function backspace () {
-        if (!word.length) return;
+  function resetGame () {
+    vowels = shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split(''));
+    consonants = shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split(''));
 
-        word.at(-1).selected = false;
-        letters = letters;
-        word = word.slice(0, -1);
-    }
+    letters = [];
+    input = [];
 
-    function clear () {
-        if (!word.length) return;
+    solutions = undefined;
+    showSolutions = false;
 
-        word.forEach(x => x.selected = false);
-        letters = letters;
-        word = [];
-    }
+    dispatch('resetgame');
+  }
 
-    // ==========#==========#==========#========== //
+  function getDaily () {
+    const v = Math.floor(Math.random() * 3) + 3;
+    const s = shuffleList(Array(v).fill(true).concat(Array(9 - v).fill(false)));
+    for (let x of s) pickLetter(x);
+  }
 
-    let worker;
-    let results = null;
-    let showLongest = false;
+  export function getGameState () {
+    return {
+      letters: letters.map(x => x.value),
+      input: input.map(x => letters.indexOf(x)),
+      solutions: solutions
+    };
+  }
 
-    // ==========#==========#==========#========== //
-    
-    onMount(() => {
-        const d = getDaily('letters');
+  export function applyGameState (gameState) {
+    for (let x of gameState.letters) letters.push(new L(x));
+    for (let x of gameState.input) selectLetter(letters[x]);
+    solutions = gameState.solutions;
+  }
 
-        if (daily && d) {
-            generateDaily();
-
-            word = d.input.map(x => letters[x]);
-            d.input.forEach(x => letters[x].selected = true);
-
-            results = d.results;
-            dispatch('draintimer');
-
-            return;
-        }
-
-        worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
-        worker.addEventListener('message', e => results = e.data);
-    });
+  $effect(() => seed.resetGlobal);
 </script>
 
-<svelte:window
-    on:keydown={ e => {
-        if (!started || timerDone) return;
+<svelte:window on:keydown={ e => {
+  if (!$running) return;
+  
+  if (e.key === 'Backspace') removeLetter();
+  else if (e.key === 'Delete') clearWord();
+  else {
+    const x = letters.find(y => !y.used && y.value === e.key.toUpperCase());
+    if (x) selectLetter(x);
+  }
+} } />
 
-        const k = e.key;
+<div class="game" inert={ !$running }>
+  <LetterSelection value={ letters }
+    on:selectletter={ e => selectLetter(e.detail) }
+  />
 
-        if (k.toUpperCase().match(/^[A-Z]{1}$/g)) {
-            let l = letters.find(x => x.value === k.toUpperCase() && !x.selected);
-            if (l) selectSquare(l);
-        }
-        if (k === 'Backspace') backspace();
-        if (k === 'Delete') clear();
-    } }
-/>
-
-<div class="wrapper">
-    <div class="input-wrapper" inert={ !started || timerDone }>
-        <LettersSquares { letters }
-            on:selectsquare={ e => selectSquare(e.detail) }
-        />
-
-        <LettersInput { word } disabled={ timerDone }
-            on:backspace={ backspace }
-            on:clear={ clear }
-        />
-    </div>
-
-    <span class="buttons">
-        { #if !started && !daily && letters.length < 9 }
-            <span in:flipTransition out:flipTransition>
-                <button on:click={ () => generateLetter(false) } disabled={ consonantSel === 6 }>CONSONANT</button>
-                <button on:click={ () => generateLetter(true) } disabled={ vowelSel === 5 }>VOWEL</button>
-            </span>
-        { :else if !started && daily }
-            <span in:flipTransition out:flipTransition>
-                <button on:click={ generateDaily }>SHOW TODAY&CloseCurlyQuote;S LETTERS</button>
-            </span>
-        { :else if timerDone }
-            <span in:flipTransition out:flipTransition>
-                <button on:click={ () => showLongest = true } disabled={ !results }>{ results ? 'SHOW LONGEST WORDS' : 'SOLVING\u2026' }</button>
-                
-                { #if !daily }
-                    <button on:click={ () => dispatch('gamereset') }>RESET</button>
-                { /if }
-            </span>
-        { /if }
-    </span>
-
-    { #if showLongest && results }
-        <p style:margin=0 style:text-align="center" style:display="flex" style:flex-direction="column" style:gap="0.25rem">
-            <span class="words">
-                { #each results.words as word }
-                    <span><b>{ word }</b></span>
-                { /each }
-            </span>
-            <i style:font-size="smaller">({ results.words.length } { results.longest }-letter word{ results.words.length === 1 ? '' : 's' } found)</i>
-        </p>
-    { /if }
+  <InputArea value={ input }
+    on:removeletter={ () => removeLetter() }
+    on:clearword={ () => clearWord() }
+  />
 </div>
 
+<div class="buttons">
+  { #if $done }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button class="text-btn" on:click={ () => showSolutions = true } disabled={ !solutions }>{ solutions ? 'SHOW LONGEST WORDS' : 'SOLVING\u0133' }</button>
+      { #if !daily }
+        <button class="text-btn" on:click={ resetGame }>RESET</button>
+      { /if }
+    </div>
+  { :else if daily && letters.length === 0 }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button class="text-btn" on:click={ getDaily }>SHOW TODAY'S LETTERS</button>
+    </div>
+  { :else if letters.length < 9 }
+    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <button class="text-btn" on:click={ () => pickLetter(true) } disabled={ letters.filter(x => 'AEIOU'.includes(x.value)).length === 5 }>VOWEL</button>
+      <button class="text-btn" on:click={ () => pickLetter() } disabled={ letters.filter(x => !'AEIOU'.includes(x.value)).length === 6 }>CONSONANT</button>
+    </div>
+  { /if }
+</div>
+
+{ #if showSolutions }
+  <div class="solution" transition:fade={ { duration: 150, easing: cssEaseIn } }>
+    <span class="a">
+      { #each solutions.words as x }
+        <span>{ x.toUpperCase() }</span>
+      { /each }
+    </span>
+    <span class="c">({ solutions.words.length } { solutions.longest }-letter word{ solutions.words.length === 1 ? '' : 's' } found)</span>
+  </div>
+{ /if }
+
 <style>
-    .wrapper {
-        width: 100%;
-        height: min-content;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-    }
+  .game {
+    width: 100%;
+    display: flex;
+    gap: 1rem;
+    flex-direction: column;
+  }
 
-    .input-wrapper {
-        display: contents;
-    }
+  .buttons {
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 100%;
+    align-items: center;
+    justify-items: center;
+  }
 
-    .buttons {
-        width: 100%;
-        height: max-content;
-        display: grid;
-        grid-template-rows: 100%;
-        grid-template-columns: 100%;
-        justify-items: center;
-    }
+  .buttons .wrapper {
+    display: flex;
+    gap: 0.5rem;
+    grid-area: 1 / 1 / 2 / 2;
+    backface-visibility: hidden;
+  }
 
-    .buttons > span {
-        grid-area: 1 / 1 / 2 / 2;
-        display: flex;
-        gap: 0.5rem;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-    }
+  .solution {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
 
-    .buttons button {
-        padding: 0.5rem 0.7rem;
-        border: 1px solid currentColor;
-        border-radius: 0.75rem;
-        color: var(--theme-color);
-        font-weight: bold;
-        transition-property: background, color, filter, opacity, border;
-        transition-duration: 0.15s;
-    }
+  .solution .a {
+    font-weight: bold;
+    display: flex;
+    gap: 0.25rem 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
 
-    @media (hover: hover) {
-        .buttons button:hover {
-            border: 1px solid var(--theme-color);
-            background: var(--theme-color);
-            color: white;
-        }
-    }
-    
-    .buttons button:focus {
-        border: 1px solid var(--theme-color);
-        background: var(--theme-color);
-        color: white;
-        outline: 1px solid var(--theme-color);
-        outline-offset: 0.125rem;
-    }
-
-    .buttons button:disabled {
-        filter: grayscale(1);
-        opacity: 0.5;
-        pointer-events: none;
-    }
-
-    .words {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 0.25rem 1rem;
-    }
+  .solution .c {
+    font-size: 80%;
+    font-style: italic;
+  }
 </style>

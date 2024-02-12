@@ -1,126 +1,100 @@
 <script>
-    import { fade } from "svelte/transition";
+  import flip from '$lib/js/flipTransition.js';
+  import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-    import settings from '$lib/js/settings.js';
-    import cssEase from '$lib/js/cssEase.js';
-    import flip from '$lib/js/flipTransition.js';
+  let { value, used = false, valid = true, size = "3rem", solved = false } = $props();
 
-    export let value = null;
-    export let disabled = false;
-    export let valid = true;
-    export let shortcut = null;
+  let canvas = $state();
+  let span = $state();
 
-    let oldValue;
-    let displayOldValue;
+  let scale = $state(1);
 
-    $: reducedMotion = $settings['reducedMotion'];
-    $: invalidClass = value && !valid;
-    $: {
-        displayOldValue = oldValue;
-        oldValue = value;
-    }
+  let invalid = $derived(valid === false);
+
+  $effect(() => {
+    const ctx = canvas.getContext('2d');
+
+    ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
+    const m = ctx.measureText(value);
+    const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
+
+    const n = span.getBoundingClientRect();
+    const containerWidth = n.width;
+
+    scale = Math.min(1, containerWidth / textWidth);
+  });
 </script>
 
-<button type="button" { disabled } inert={ !value || !valid } class:invalid={ invalidClass } on:click>
-    { #if $settings['numbersShortcuts'] && value && shortcut }
-        <div transition:fade={ { duration: 150 } } class="shortcut">
-            { shortcut ?? '' }
-        </div>
-    { /if }
+<canvas bind:this={ canvas } />
 
-    { #if reducedMotion }
-        <div style:--font-scale={ Math.min(1, 2 / ((1.5 + `${value ?? ''}`.length) / 2)) } class="main">
-            { #if value }
-                <span in:fade={ { duration: 150 } }>{ value ?? '' }</span>
-            { /if }
-        </div>
-    { :else }
-        { #key value }
-            <div style:--font-scale={ Math.min(1, 2 / ((1.5 + `${displayOldValue ?? ''}`.length) / 2)) } class="back" in:flip={ { from: 0, to: 180 } }>{ displayOldValue ?? '' }</div>
-            <div style:--font-scale={ Math.min(1, 2 / ((1.5 + `${value ?? ''}`.length) / 2)) } class="main" in:flip>{ value ?? '' }</div>
-        { /key }
-    { /if }
+<button disabled={ used === true } inert={ invalid } style:--size={ size } on:click>
+  { #key value }
+    <div in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } } class="square" class:invalid class:solved>
+      <div class="text" bind:this={ span } style:--text-scale={ scale }>
+        { value }
+      </div>
+    </div>
+  { /key }
 </button>
 
 <style>
-    :root {
-        --font-size: 1.5rem;
-        --font-scale: 1;
-    }
+  canvas {
+    display: none;
+  }
 
-    button {
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        position: relative;
-        display: grid;
-        grid-template-rows: 100%;
-        grid-template-columns: 100%;
-        align-items: center;
-        justify-items: center;
-        font-weight: bold;
-        color: white;
-        transition-property: transform, filter, opacity;
-        transition-duration: 0.15s;
-    }
+  button {
+    padding: 0;
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 100%;
+    align-items: center;
+    justify-items: center;
+    border-radius: 30%;
+    transition-property: transform, filter, opacity, background;
+    transition-duration: 0.15s;
+  }
 
-    button.invalid {
-        opacity: 0.25;
-    }
+  button:not(:disabled):hover {
+    transform: scale(1.1);
+  }
 
-    button:disabled {
-        transform: scale(0.8);
-        filter: grayscale(1);
-        opacity: 0.5;
-    }
+  button:disabled {
+    filter: grayscale(1);
+    transform: scale(0.9);
+    opacity: 0.5;
+  }
 
-    @media (hover: hover) {
-        button:hover {
-            transform: scale(1.1) rotate(2.5deg);
-        }
-    }
-    
-    button:focus {
-        transform: scale(1.1) rotate(2.5deg);
-    }
+  .square {
+    width: var(--size);
+    height: var(--size);
+    padding: 0.3rem;
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 100%;
+    align-items: center;
+    justify-items: center;
+    grid-area: 1 / 1 / 2 / 2;
+    background: var(--theme-color);
+    border-radius: 30%;
+    backface-visibility: hidden;
+    transition-property: background, opacity;
+    transition-duration: 0.15s;
+  }
 
-    button, .main, .back {
-        border-radius: calc(100% / 3);
-    }
+  .square.invalid {
+    background: var(--colar-red-6);
+    opacity: 0.5;
+  }
 
-    .shortcut {
-        padding: 0.15rem 0.3rem;
-        position: absolute;
-        top: -0.375rem;
-        left: -0.375rem;
-        background: var(--theme-color);
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        z-index: 1;
-        transition: background 0.15s;
-    }
+  .square.solved {
+    background: var(--colar-green-6);
+  }
 
-    .main, .back {
-        width: 100%;
-        height: 100%;
-        grid-area: 1 / 1 / 2 / 2;
-        display: grid;
-        grid-template-rows: 100%;
-        grid-template-columns: 100%;
-        align-items: center;
-        justify-items: center;
-        background: var(--theme-color);
-        font-size: calc(var(--font-size) * var(--font-scale));
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-        transition: background 0.15s;
-    }
-
-    .back {
-        transform: rotateX(180deg);
-    }
-
-    .invalid .main, .invalid .back, .invalid .shortcut {
-        background: var(--red);
-    }
+  .text {
+    width: 100%;
+    text-align: center;
+    font-size: calc(var(--size) * 0.5 * var(--text-scale));
+    font-weight: bold;
+    color: white;
+  }
 </style>
