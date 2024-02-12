@@ -1,4 +1,5 @@
 <script>
+  import { page } from '$app/stores';
   import X from 'lucide-svelte/icons/x';
 
   let dialog = $state();
@@ -10,6 +11,13 @@
   export function close () {
     dialog.close();
   }
+  
+  let dialogBody = $state();
+
+  $effect(() => {
+    void $page.url.pathname;
+    dialogBody.scrollTop = 0;
+  });
 </script>
 
 <dialog bind:this={ dialog }>
@@ -26,7 +34,7 @@
       </button>
     </div>
 
-    <div class="body">
+    <div class="body" bind:this={ dialogBody }>
       <slot name="body" />
     </div>
 

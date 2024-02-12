@@ -137,7 +137,7 @@
     </div>
   { :else if daily && letters.length === 0 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ getDaily }>SHOW TODAY'S LETTERS</button>
+      <button class="text-btn" on:click={ getDaily }>SHOW TODAY&CloseCurlyQuote;S LETTERS</button>
     </div>
   { :else if letters.length < 9 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>

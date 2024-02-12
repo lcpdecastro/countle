@@ -18,12 +18,12 @@
       { #if $page.url.pathname.includes('daily') }
         <p>
           Welcome to <b>Countle: Daily Numbers</b>, where your goal is to get as close as possible to a target 3-digit number using six randomly selected numbers.
-          Everyone in the world will get the same numbers and target everyday, but you won't know what they are until you actually start the game, so good luck!
+          Everyone in the world will get the same numbers and target everyday, but you won&CloseCurlyQuote;t know what they are until you actually start the game, so good luck!
         </p>
       { :else }
         <p>
           Welcome to <b>Countle: Numbers</b>, where your goal is to get as close as possible to a target 3-digit number using six randomly selected numbers.
-          Although you get to choose whether the numbers are big or small, the numbers you <i>actually</i> get are completely random, so good luck!
+          Although you get to choose whether to reveal a small or large number, the numbers you <i>actually</i> get are completely random, so good luck!
         </p>
       { /if }
 
@@ -35,8 +35,8 @@
         </p>
       { :else }
         <p>
-          At the beginning of every round, you get to choose six numbers from two bins: <b>big numbers</b>, containing 25, 50, 75, and 100; and <b>small numbers</b>, containing two each of the numbers from 1 to 10.
-          You get to choose how many of each you want&mdash;you can even choose to have four big numbers, or none at all!
+          At the beginning of every round, you get to choose six numbers from two bins: <b>large numbers</b>, containing 25, 50, 75, and 100; and <b>small numbers</b>, containing two each of the numbers from 1 to 10.
+          You get to choose how many of each you want&mdash;you can even choose to have four large numbers, or none at all!
         </p>
         <p>
           After choosing your six numbers, you then generate a random three-digit number from 101 to 999.
@@ -52,7 +52,7 @@
         You are also prohibited from making any value that is less than 1 or not a whole number.
       </p>
       <p>
-        Apart from this, the game will also keep you from performing some repetitive calculations, such as multiplying and dividing by 1 or subtracting half of a number to itself.
+        Apart from this, the game will also keep you from performing some repetitive calculations, such as multiplying and dividing by 1 or subtracting a number by half of itself.
       </p>
 
       <h2>Solutions</h2>
@@ -61,7 +61,7 @@
       </p>
       <p>
         However, some combinations of numbers and targets are impossible to solve exactly.
-        If the game can't find an exact solution, don't worry: there really isn't one!
+        If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
       </p>
       <p>
         Note that solutions are computed by the game on your device without calling any other external websites.
@@ -75,7 +75,7 @@
       { #if $page.url.pathname.includes('daily') }
         <p>
           Welcome to <b>Countle: Daily Letters</b>, where your goal is to form the longest word you can using nine randomly selected letters.
-          Everyone in the world will get the same nine letters everyday, but you won't know what they are until you actually start the game, so good luck!
+          Everyone in the world will get the same nine letters everyday, but you won&CloseCurlyQuote;t know what they are until you actually start the game, so good luck!
         </p>
       { :else }
         <p>
@@ -103,7 +103,7 @@
       </p>
       <p>
         You may only use the letters as many times as you have them.
-        For uniformity, the game checks against the SCOWL and Friends US English word list; as such, spellings such as "colour" or "metre" are not accepted.
+        For uniformity, the game checks against the SCOWL and Friends US English word list; as such, spellings such as &OpenCurlyDoubleQuote;colour&CloseCurlyDoubleQuote; or &OpenCurlyDoubleQuote;metre&CloseCurlyDoubleQuote; are not accepted.
       </p>
 
       <h2>Longest words</h2>
@@ -112,7 +112,7 @@
       </p>
       <p>
         Because the letters you choose are completely random, it is quite rare to have a set of letters that can form a nine-letter word.
-        If the game can't find a nine-letter word with the letters you have, don't worry: there really isn't one!
+        If the game can&CloseCurlyQuote;t find a nine-letter word with the letters you have, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
       </p>
       <p>
         Note that words are checked by the game on your device without calling any other external websites.

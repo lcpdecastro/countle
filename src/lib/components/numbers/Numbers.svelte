@@ -321,7 +321,7 @@
     </div>
   { :else if daily && target === undefined }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ getDaily }>SHOW TODAY'S NUMBERS</button>
+      <button class="text-btn" on:click={ getDaily }>SHOW TODAY&CloseCurlyQuote;S NUMBERS</button>
     </div>
   { :else if numbers.length < 6 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
