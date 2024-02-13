@@ -41,12 +41,14 @@
     dailyApplied = true;
   });
 
-  $effect(() => {
-    return () => {
-      if ($running) $daily['letters'] = game.getGameState();
-    };
-  });
+  function forfeit () {
+    if ($running) $daily['letters'] = game.getGameState();
+  }
+
+  $effect(() => forfeit);
 </script>
+
+<svelte:window on:beforeunload={ forfeit } />
 
 <Timer duration={ 30 } bind:this={ timer } />
 
