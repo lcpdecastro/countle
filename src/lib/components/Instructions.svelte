@@ -1,5 +1,6 @@
 <script>
   import Help from 'lucide-svelte/icons/help-circle';
+  import Alert from 'lucide-svelte/icons/alert-triangle';
 
   import Dialog from './Dialog.svelte';
 
@@ -7,6 +8,18 @@
 
   let dialog = $state();
 </script>
+
+{ #snippet dailyNote() }
+  <span class="daily-note">
+    <p class="alert-title">
+      <Alert size="1rem" />
+      <b>IMPORTANT NOTE</b>
+    </p>
+    <p>
+      If you abandon a Daily game by reloading or visiting a different page while the timer is running, your game will be <b>forfeited</b> in its current state!
+    </p>
+  </span>
+{ /snippet }
 
 <Dialog bind:this={ dialog }>
   <svelte:fragment slot="title">
@@ -17,12 +30,12 @@
     { #if $page.url.pathname.includes('numbers') }
       { #if $page.url.pathname.includes('daily') }
         <p>
-          Welcome to <b>Countle: Daily Numbers</b>, where your goal is to get as close as possible to a target 3-digit number using six randomly selected numbers.
+          Welcome to <b>Countle: Daily Numbers</b>, where your goal is to get as close as possible to a target three-digit number using six randomly selected numbers.
           Everyone in the world will get the same numbers and target everyday, but you won&CloseCurlyQuote;t know what they are until you actually start the game, so good luck!
         </p>
       { :else }
         <p>
-          Welcome to <b>Countle: Numbers</b>, where your goal is to get as close as possible to a target 3-digit number using six randomly selected numbers.
+          Welcome to <b>Countle: Numbers</b>, where your goal is to get as close as possible to a target three-digit number using six randomly selected numbers.
           Although you get to choose whether to reveal a small or large number, the numbers you <i>actually</i> get are completely random, so good luck!
         </p>
       { /if }
@@ -54,13 +67,16 @@
       <p>
         Apart from this, the game will also keep you from performing some repetitive calculations, such as multiplying and dividing by 1 or subtracting a number by half of itself.
       </p>
+      { #if $page.url.pathname.includes('daily') }
+        { @render dailyNote() }
+      { /if }
 
       <h2>Solutions</h2>
       <p>
         Once your time is up, the game will allow you to look through the solutions that it has computed, as well as how many of them there are.
       </p>
       <p>
-        However, some combinations of numbers and targets are impossible to solve exactly.
+        Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
         If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
       </p>
       <p>
@@ -103,15 +119,18 @@
       </p>
       <p>
         You may only use the letters as many times as you have them.
-        For uniformity, the game checks against the SCOWL and Friends US English word list; as such, spellings such as &OpenCurlyDoubleQuote;colour&CloseCurlyDoubleQuote; or &OpenCurlyDoubleQuote;metre&CloseCurlyDoubleQuote; are not accepted.
+        For uniformity, the game checks against the SCOWL and Friends American English word list; as such, spellings such as &OpenCurlyDoubleQuote;colour&CloseCurlyDoubleQuote; or &OpenCurlyDoubleQuote;metre&CloseCurlyDoubleQuote; are not accepted.
       </p>
+      { #if $page.url.pathname.includes('daily') }
+        { @render dailyNote() }
+      { /if }
 
       <h2>Longest words</h2>
       <p>
         Once your time is up, the game will allow you to look through the longest words it has found, as well as how many of them there are.
       </p>
       <p>
-        Because the letters you choose are completely random, it is quite rare to have a set of letters that can form a nine-letter word.
+        Because the letters you get are completely random, it is quite rare to have a set of letters that can form a nine-letter word.
         If the game can&CloseCurlyQuote;t find a nine-letter word with the letters you have, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
       </p>
       <p>
@@ -137,5 +156,19 @@
 
   .icon-btn {
     align-self: center;
+  }
+
+  .daily-note {
+    padding: 0.4rem 0.6rem;
+    border: 0.075rem solid var(--colar-red-8);
+    border-radius: 0.6rem;
+    background: var(--colar-red-0);
+    color: var(--colar-red-8);
+  }
+
+  .alert-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 </style>
