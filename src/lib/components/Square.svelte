@@ -7,22 +7,28 @@
   let canvas = $state();
   let span = $state();
 
-  let scale = $state(1);
+  let textScale = $state(1);
+  let scaleInit = $state(false);
 
   let invalid = $derived(valid === false);
 
   $effect(() => {
-    const ctx = canvas.getContext('2d');
+    if (!scaleInit) {
+      const ctx = canvas.getContext('2d');
 
-    ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
-    const m = ctx.measureText(value);
-    const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
+      ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
+      const m = ctx.measureText(value);
+      const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
 
-    const n = span.getBoundingClientRect();
-    const containerWidth = n.width;
+      const n = span.getBoundingClientRect();
+      let containerWidth = n.width;
+      if (used) containerWidth /= 0.9;
 
-    scale = Math.min(1, containerWidth / textWidth);
+      textScale = Math.min(1, containerWidth / textWidth);
+      scaleInit = true;
+    }
   });
+
 </script>
 
 <canvas bind:this={ canvas } />
@@ -30,7 +36,7 @@
 <button disabled={ used === true } inert={ invalid } style:--size={ size } on:click>
   { #key value }
     <div in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } } class="square" class:invalid class:solved>
-      <div class="text" bind:this={ span } style:--text-scale={ scale }>
+      <div class="text" bind:this={ span } style:--text-scale={ textScale }>
         { value }
       </div>
     </div>

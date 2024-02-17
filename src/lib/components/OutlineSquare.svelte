@@ -21,15 +21,17 @@
 
     textScale = Math.min(1, containerWidth / textWidth);
   });
+
 </script>
 
 <canvas bind:this={ canvas } />
 
 <button disabled={ used } style:--size={ size } on:click>
   { #key value }
-    <div 
-    <div class="text" bind:this={ span } in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseIn } } style:--text-scale={ textScale }>
-      { value }
+    <div class="square">
+      <div class="text" in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseIn } } bind:this={ span } style:--text-scale={ textScale }>
+        { value }
+      </div>
     </div>
   { /key }
 </button>
@@ -40,6 +42,20 @@
   }
 
   button {
+    padding: 0;
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 100%;
+    align-items: center;
+    justify-items: center;
+    border-radius: 30%;
+  }
+
+  button:not(:disabled):hover .square {
+    background: var(--theme-color-light);
+  }
+
+  .square {
     width: var(--size);
     height: var(--size);
     padding: 0.3rem;
@@ -48,15 +64,12 @@
     grid-template-columns: 100%;
     align-items: center;
     justify-items: center;
-    background: none;
+    grid-area: 1 / 1 / 2 / 2;
     border: 0.075rem solid var(--theme-color);
     border-radius: 30%;
-    transition-property: transform, filter, opacity, background;
+    backface-visibility: hidden;
+    transition-property: background;
     transition-duration: 0.15s;
-  }
-
-  button:not(:disabled):hover {
-    background: var(--theme-color-light);
   }
 
   .text {

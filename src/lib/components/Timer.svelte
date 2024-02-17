@@ -1,5 +1,7 @@
 <script>
-  import { tweened } from "svelte/motion";
+  import { tweened } from 'svelte/motion';
+  
+  import { cssEaseIn } from '$lib/js/cssEase.js';
 
   let { duration } = $props();
 
@@ -7,12 +9,11 @@
 
   export async function start () {
     const x = store.set(0);
-    x.then(() => console.log('hi'));
     return x;
   }
 
   export async function reset () {
-    return store.set(duration, { duration: 150 });
+    return store.set(duration, { duration: 150, easing: cssEaseIn });
   }
   
   export async function drain () {

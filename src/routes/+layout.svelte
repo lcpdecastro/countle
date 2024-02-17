@@ -12,7 +12,7 @@
 
 <svelte:head>
   <title>COUNTLE</title>
-  <link rel="icon" href={ `/icon-192.png` } />
+  <link rel="icon" href={ `/icon${$page.url.pathname.replaceAll('/', '-')}.png` } />
   <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#fab005' : '#4c6ef5' }>
 </svelte:head>
 
