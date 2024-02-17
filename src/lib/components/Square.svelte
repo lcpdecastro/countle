@@ -13,6 +13,11 @@
   let invalid = $derived(valid === false);
 
   $effect(() => {
+    void value;
+    scaleInit = false;
+  });
+
+  $effect(() => {
     if (!scaleInit) {
       const ctx = canvas.getContext('2d');
 
