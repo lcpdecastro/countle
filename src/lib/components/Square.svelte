@@ -1,4 +1,6 @@
 <script>
+  import { untrack } from 'svelte';
+
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
@@ -8,32 +10,21 @@
   let span = $state();
 
   let textScale = $state(1);
-  let scaleInit = $state(false);
 
   let invalid = $derived(valid === false);
 
   $effect(() => {
-    void value;
-    scaleInit = false;
+    const ctx = canvas.getContext('2d');
+
+    ctx.font = `bold calc(${size} * 0.5 * ${untrack(() => used) ? 0.9 : 1}) "Work Sans"`;
+    const m = ctx.measureText(value);
+    const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
+
+    const n = span.getBoundingClientRect();
+    let containerWidth = n.width;
+
+    textScale = Math.min(1, containerWidth / textWidth);
   });
-
-  $effect(() => {
-    if (!scaleInit) {
-      const ctx = canvas.getContext('2d');
-
-      ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
-      const m = ctx.measureText(value);
-      const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
-
-      const n = span.getBoundingClientRect();
-      let containerWidth = n.width;
-      if (used) containerWidth /= 0.9;
-
-      textScale = Math.min(1, containerWidth / textWidth);
-      scaleInit = true;
-    }
-  });
-
 </script>
 
 <canvas bind:this={ canvas } />
@@ -102,6 +93,7 @@
   }
 
   .text {
+    background: black;
     width: 100%;
     text-align: center;
     font-size: calc(var(--size) * 0.5 * var(--text-scale));

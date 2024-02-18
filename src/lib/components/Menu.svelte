@@ -18,7 +18,7 @@
 <dialog bind:this={ menu }>
   <div class="back" on:click={ () => menu.close() } />
 
-  <div class="main">
+  <nav class="main">
     <h2>INFINITE</h2>
     <a class:current={ $page.url.pathname === '/infinite/letters' } href="/infinite/letters">LETTERS</a>
     <a class:current={ $page.url.pathname === '/infinite/numbers' } href="/infinite/numbers">NUMBERS</a>
@@ -26,7 +26,7 @@
     <h2>DAILY</h2>
     <a class:current={ $page.url.pathname === '/daily/letters' } href="/daily/letters">LETTERS</a>
     <a class:current={ $page.url.pathname === '/daily/numbers' } href="/daily/numbers">NUMBERS</a>
-  </div>
+  </nav>
 </dialog>
 
 <button class="icon-btn" on:click={ () => menu.showModal() }>
