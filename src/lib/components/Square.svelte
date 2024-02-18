@@ -93,7 +93,6 @@
   }
 
   .text {
-    background: black;
     width: 100%;
     text-align: center;
     font-size: calc(var(--size) * 0.5 * var(--text-scale));
