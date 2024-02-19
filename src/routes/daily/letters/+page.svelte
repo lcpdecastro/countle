@@ -53,6 +53,6 @@
 <Timer duration={ 30 } bind:this={ timer } />
 
 <Letters
-  on:startgame={ () => startGame() }
+  onStartGame={ startGame }
   bind:this={ game }
 />

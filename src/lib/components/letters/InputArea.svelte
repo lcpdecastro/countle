@@ -1,16 +1,14 @@
 <script>
-  import { createEventDispatcher, getContext } from "svelte";
+  import { getContext } from "svelte";
 
   import dictionary from '$lib/js/dictionary.js';
 
   import Backspace from "lucide-svelte/icons/delete";
   import Trash from "lucide-svelte/icons/trash-2";
 
-  const dispatch = createEventDispatcher();
-
   const running = getContext('running');
 
-  let { value = [] } = $props();
+  let { value = [], onRemoveLetter, onClearWord } = $props();
 
   let word = $derived(value.map(x => x.value).join(''));
 </script>
@@ -20,10 +18,14 @@
     { word || '\u00a0' }
   </div>
 
-  <button class="icon-btn backspace" disabled={ !$running } on:click={ () => dispatch('removeletter') }>
+  <button class="icon-btn backspace" disabled={ !$running }
+    onclick={ onRemoveLetter }
+  >
     <Backspace strokeWidth="0.075rem" size="100%" />
   </button>
-  <button class="icon-btn delete" disabled={ !$running } on:click={ () => dispatch('clearword') }>
+  <button class="icon-btn delete" disabled={ !$running }
+    onclick={ onClearWord }
+  >
     <Trash strokeWidth="0.075rem" size="100%" />
   </button>
 </div>

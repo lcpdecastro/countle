@@ -1,20 +1,17 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
   import Row from './Row.svelte';
 
-  const dispatch = createEventDispatcher();
-
-  let { steps, solved = false } = $props();
+  let { steps, solved = false, onSelectNumber, onRemoveNumber, onRemoveOperation, onRemoveRow } = $props();
 </script>
 
 <div class="wrapper">
   { #each steps as step, i (step) }
     <Row
       value={ step } solved = { solved && i === steps.length - 1 }
-      on:selectnumber={ e => dispatch('selectnumber', e.detail) }
-      on:removenumber={ e => dispatch('removenumber', [i, e.detail]) }
-      on:removeoperation={ () => dispatch('removeoperation', i) }
-      on:removerow={ () => dispatch('removerow', i) }
+      onSelectNumber={ x => onSelectNumber(x) }
+      onRemoveNumber={ x => onRemoveNumber(i, x) }
+      onRemoveOperation={ () => onRemoveOperation(i) }
+      onRemoveRow={ () => onRemoveRow(i) }
     />
   { /each }
 </div>

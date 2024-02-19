@@ -3,7 +3,7 @@
   import seed from 'seed-random';
   import dayjs from 'dayjs';
 
-  import { createEventDispatcher, getContext } from 'svelte';
+  import { getContext } from 'svelte';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
 
@@ -13,7 +13,7 @@
   import LetterSelection from './LetterSelection.svelte';
   import InputArea from './InputArea.svelte';
 
-  const dispatch = createEventDispatcher();
+  let { onStartGame, onResetGame } = $props();
 
   const running = getContext('running');
   const done = getContext('done');
@@ -50,7 +50,7 @@
     if (vowel) letters.push(new L(vowels.pop()));
     else letters.push(new L(consonants.pop()));
     if (letters.length === 9) {
-      dispatch('startgame');
+      onStartGame();
       worker.postMessage({ letters: letters.map(x => x.value) });
     }
   }
@@ -79,7 +79,7 @@
     solutions = undefined;
     showSolutions = false;
 
-    dispatch('resetgame');
+    onResetGame();
   }
 
   function getDaily () {
@@ -118,12 +118,12 @@
 
 <div class="game" inert={ !$running }>
   <LetterSelection value={ letters }
-    on:selectletter={ e => selectLetter(e.detail) }
+    onSelectLetter={ x => selectLetter(x) }
   />
 
   <InputArea value={ input }
-    on:removeletter={ () => removeLetter() }
-    on:clearword={ () => clearWord() }
+    onRemoveLetter={ removeLetter }
+    onClearWord={ clearWord }
   />
 </div>
 

@@ -53,7 +53,7 @@
 <Timer duration={ 30 } bind:this={ timer } />
 
 <Numbers
-  on:startgame={ () => startGame() }
-  on:storesolutions={ e => $daily['numbers']['solutions'] = e.detail }
+  onStartGame={ startGame }
+  onStoreSolutions={ x => $daily['numbers']['solutions'] = x }
   bind:this={ game }
 />

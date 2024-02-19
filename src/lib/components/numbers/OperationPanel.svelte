@@ -1,17 +1,15 @@
 <script>
-  import { createEventDispatcher } from "svelte";
-
-  const dispatch = createEventDispatcher();
-
-  let { size = "3rem", invalidOps } = $props();
+  let { size = "3rem", invalidOps, onSelectOperation } = $props();
 </script>
 
 <div class="wrapper">
-  { #each "\u002b\u2212\u00d7\u00f7" as x }
-    <button style:--size={ size } on:click={ () => dispatch('selectoperation', x) } disabled={ invalidOps[x] }>
+  { #each "\u002b\u2212\u00d7\u00f7" as o }
+    <button style:--size={ size } disabled={ invalidOps[o] }
+      onclick={ () => onSelectOperation(o) }  
+    >
       <div class="square">
         <div class="text">
-          { x }
+          { o }
         </div>
       </div>
     </button>

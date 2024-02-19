@@ -3,7 +3,7 @@
   import seed from 'seed-random';
   import dayjs from 'dayjs';
 
-  import { createEventDispatcher, getContext, tick } from 'svelte';
+  import { getContext, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
 
@@ -15,7 +15,7 @@
   import Steps from './Steps.svelte';
   import OperationPanel from './OperationPanel.svelte';
 
-  const dispatch = createEventDispatcher();
+  let { onStartGame, onResetGame, onStoreSolutions } = $props();
 
   const running = getContext('running');
   const done = getContext('done');
@@ -57,7 +57,7 @@
   
   function pickTarget () {
     target = Math.floor(Math.random() * 899) + 101;
-    dispatch('startgame');
+    onStartGame();
     worker.postMessage({ numbers: numbers.map(x => x.value), target });
   }
 
@@ -132,7 +132,7 @@
     solutions = undefined;
     sampleSolution = undefined;
 
-    dispatch('resetgame');
+    onResetGame();
   }
 
   function showSolution () {
@@ -279,9 +279,7 @@
     if (gameState.solutions) solutions = gameState.solutions;
     else {
       worker.postMessage({ numbers: numbers.map(x => x.value), target });
-      worker.addEventListener('message', e => {
-        dispatch('storesolutions', e.data);
-      }, { 'once': true });
+      worker.addEventListener('message', e => onStoreSolutions(e.data));
     }
   }
 
@@ -294,19 +292,21 @@
   <div class="board">
     <div class="left">
       <NumberSelection { numbers }
-        on:selectnumber={ e => selectNumber(e.detail) }
+        onSelectNumber={ selectNumber }
       />
     </div>
 
     <div class="right">
       <Steps bind:steps={ steps } { solved }
-        on:selectnumber={ e => selectNumber(e.detail) }
-        on:removenumber={ e => removeNumber(...e.detail) }
-        on:removeoperation={ e => removeOperation(e.detail) }
-        on:removerow={ e => removeRow(e.detail) }
+        onSelectNumber={ selectNumber }
+        onRemoveNumber={ removeNumber }
+        onRemoveOperation={ removeOperation }
+        onRemoveRow={ removeRow }
       />
 
-      <OperationPanel on:selectoperation={ e => selectOperation(e.detail) } { invalidOps } />
+      <OperationPanel { invalidOps }
+        onSelectOperation={ selectOperation }
+      />
     </div>
   </div>
 </div>
