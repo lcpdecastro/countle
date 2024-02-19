@@ -2,7 +2,7 @@
   import { scale } from 'svelte/transition';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-  let { value, used = false, size = "3rem" } = $props();
+  let { value, used = false, size = "3rem", onclick } = $props();
 
   let canvas = $state();
   let span = $state();
@@ -26,7 +26,7 @@
 
 <canvas bind:this={ canvas } />
 
-<button disabled={ used } style:--size={ size } on:click>
+<button disabled={ used } style:--size={ size } { onclick }>
   { #key value }
     <div class="square">
       <div class="text" in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseIn } } bind:this={ span } style:--text-scale={ textScale }>

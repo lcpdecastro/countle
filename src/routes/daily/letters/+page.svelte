@@ -48,11 +48,11 @@
   $effect(() => forfeit);
 </script>
 
-<svelte:window on:beforeunload={ forfeit } />
+<svelte:window onbeforeunload={ forfeit } />
 
 <Timer duration={ 30 } bind:this={ timer } />
 
 <Letters
-  on:startgame={ () => startGame() }
+  onStartGame={ startGame }
   bind:this={ game }
 />

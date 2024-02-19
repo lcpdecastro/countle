@@ -1,17 +1,15 @@
 <script>
-  import { createEventDispatcher } from 'svelte';
-
   import Square from '../Square.svelte';
 
-  const dispatch = createEventDispatcher();
-
-  let { value } = $props();
+  let { value, onSelectLetter } = $props();
 </script>
 
 <div class="wrapper">
   <div class="letters">
     { #each Array(9) as _, i }
-      <Square size="5rem" value={ value?.[i]?.value } used={ value?.[i]?.used } on:click={ () => dispatch('selectletter', value[i]) } />
+      <Square size="5rem" value={ value?.[i]?.value } used={ value?.[i]?.used }
+        onclick={ () => onSelectLetter(value[i]) }
+      />
     { /each }
   </div>
 </div>

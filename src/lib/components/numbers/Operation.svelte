@@ -2,10 +2,10 @@
   import { scale } from 'svelte/transition';
   import { cssEaseIn } from '$lib/js/cssEase.js';
 
-  let { value, size = "3rem" } = $props();
+  let { value, size = "3rem", onclick } = $props();
 </script>
 
-<button class="wrapper" style:--size={ size } inert={ value === '=' } on:click>
+<button class="wrapper" style:--size={ size } inert={ value === '=' } { onclick }>
   { #key value }
     <div in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseIn } } class="text">
       { value }

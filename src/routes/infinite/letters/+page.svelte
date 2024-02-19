@@ -31,6 +31,6 @@
 <Timer duration={ 30 } bind:this={ timer } />
 
 <Letters
-  on:startgame={ () => startGame() }
-  on:resetgame={ () => resetGame() }
+  onStartGame={ startGame }
+  onResetGame={ resetGame }
 />

@@ -28,7 +28,7 @@
   </svelte:fragment>
 </Dialog>
 
-<button on:click={ dialog.open }>
+<button onclick={ dialog.open }>
   <h1>COUNTLE</h1>
 </button>
 

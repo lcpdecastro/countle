@@ -21,7 +21,7 @@
 </script>
 
 <dialog bind:this={ dialog }>
-  <div class="back" on:click={ close } />
+  <div class="back" onclick={ close } />
 
   <div class="main">
     <div class="top">
@@ -29,7 +29,7 @@
         <slot name="title" />
       </h1>
 
-      <button class="icon-btn close" on:click={ close }>
+      <button class="icon-btn close" onclick={ close }>
         <X size="100%" strokeWidth="0.075rem" color="currentColor" />
       </button>
     </div>
@@ -39,7 +39,7 @@
     </div>
 
     <div class="bottom">
-      <button class="text-btn" on:click={ close }>OK</button>
+      <button class="text-btn" onclick={ close }>OK</button>
     </div>
   </div>
 </dialog>

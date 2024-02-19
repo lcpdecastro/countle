@@ -3,7 +3,7 @@
   import seed from 'seed-random';
   import dayjs from 'dayjs';
 
-  import { createEventDispatcher, getContext } from 'svelte';
+  import { getContext } from 'svelte';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
 
@@ -13,7 +13,7 @@
   import LetterSelection from './LetterSelection.svelte';
   import InputArea from './InputArea.svelte';
 
-  const dispatch = createEventDispatcher();
+  let { onStartGame, onResetGame } = $props();
 
   const running = getContext('running');
   const done = getContext('done');
@@ -50,7 +50,7 @@
     if (vowel) letters.push(new L(vowels.pop()));
     else letters.push(new L(consonants.pop()));
     if (letters.length === 9) {
-      dispatch('startgame');
+      onStartGame();
       worker.postMessage({ letters: letters.map(x => x.value) });
     }
   }
@@ -79,7 +79,7 @@
     solutions = undefined;
     showSolutions = false;
 
-    dispatch('resetgame');
+    onResetGame();
   }
 
   function getDaily () {
@@ -105,7 +105,7 @@
   $effect(() => seed.resetGlobal);
 </script>
 
-<svelte:window on:keydown={ e => {
+<svelte:window onkeydown={ e => {
   if (!$running) return;
   
   if (e.key === 'Backspace') removeLetter();
@@ -118,31 +118,42 @@
 
 <div class="game" inert={ !$running }>
   <LetterSelection value={ letters }
-    on:selectletter={ e => selectLetter(e.detail) }
+    onSelectLetter={ x => selectLetter(x) }
   />
 
   <InputArea value={ input }
-    on:removeletter={ () => removeLetter() }
-    on:clearword={ () => clearWord() }
+    onRemoveLetter={ removeLetter }
+    onClearWord={ clearWord }
   />
 </div>
 
 <div class="buttons">
   { #if $done }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ () => showSolutions = true } disabled={ !solutions }>{ solutions ? 'SHOW LONGEST WORDS' : 'SOLVING\u0133' }</button>
+      <button class="text-btn" disabled={ !solutions } onclick={ () => showSolutions = true }>
+        { solutions ? 'SHOW LONGEST WORDS' : 'SOLVING\u0133' }
+      </button>
+
       { #if !daily }
-        <button class="text-btn" on:click={ resetGame }>RESET</button>
+        <button class="text-btn" onclick={ resetGame }>
+          RESET
+        </button>
       { /if }
     </div>
   { :else if daily && letters.length === 0 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ getDaily }>SHOW TODAY&CloseCurlyQuote;S LETTERS</button>
+      <button class="text-btn" onclick={ getDaily }>
+        SHOW TODAY&CloseCurlyQuote;S LETTERS
+      </button>
     </div>
   { :else if letters.length < 9 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ () => pickLetter(true) } disabled={ letters.filter(x => 'AEIOU'.includes(x.value)).length === 5 }>VOWEL</button>
-      <button class="text-btn" on:click={ () => pickLetter() } disabled={ letters.filter(x => !'AEIOU'.includes(x.value)).length === 6 }>CONSONANT</button>
+      <button class="text-btn" disabled={ letters.filter(x => 'AEIOU'.includes(x.value)).length === 5 } onclick={ () => pickLetter(true) }>
+        VOWEL
+      </button>
+      <button class="text-btn" disabled={ letters.filter(x => !'AEIOU'.includes(x.value)).length === 6 } onclick={ () => pickLetter() }>
+        CONSONANT
+      </button>
     </div>
   { /if }
 </div>

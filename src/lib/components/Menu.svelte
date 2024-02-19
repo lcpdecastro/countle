@@ -16,7 +16,7 @@
 </script>
 
 <dialog bind:this={ menu }>
-  <div class="back" on:click={ () => menu.close() } />
+  <div class="back" onclick={ () => menu.close() } />
 
   <nav class="main">
     <h2>INFINITE</h2>
@@ -29,7 +29,7 @@
   </nav>
 </dialog>
 
-<button class="icon-btn" on:click={ () => menu.showModal() }>
+<button class="icon-btn" onclick={ () => menu.showModal() }>
   <Menu strokeWidth="0.1rem" size="100%" />
 </button>
 

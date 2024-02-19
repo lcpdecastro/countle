@@ -141,7 +141,7 @@
   </svelte:fragment>
 </Dialog>
 
-<button class="icon-btn" on:click={ () => dialog.open() }>
+<button class="icon-btn" onclick={ () => dialog.open() }>
   <Help strokeWidth="0.1rem" size="100%" />
 </button>
 

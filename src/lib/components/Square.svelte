@@ -4,7 +4,7 @@
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-  let { value, used = false, valid = true, size = "3rem", solved = false } = $props();
+  let { value, used = false, valid = true, size = "3rem", solved = false, onclick } = $props();
 
   let canvas = $state();
   let span = $state();
@@ -29,7 +29,7 @@
 
 <canvas bind:this={ canvas } />
 
-<button disabled={ used === true } inert={ invalid } style:--size={ size } on:click>
+<button disabled={ used === true } inert={ invalid } style:--size={ size } { onclick }>
   { #key value }
     <div in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } } class="square" class:invalid class:solved>
       <div class="text" bind:this={ span } style:--text-scale={ textScale }>

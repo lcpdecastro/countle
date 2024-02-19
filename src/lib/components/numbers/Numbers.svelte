@@ -3,7 +3,7 @@
   import seed from 'seed-random';
   import dayjs from 'dayjs';
 
-  import { createEventDispatcher, getContext, tick } from 'svelte';
+  import { getContext, tick } from 'svelte';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
 
@@ -15,7 +15,7 @@
   import Steps from './Steps.svelte';
   import OperationPanel from './OperationPanel.svelte';
 
-  const dispatch = createEventDispatcher();
+  let { onStartGame, onResetGame, onStoreSolutions } = $props();
 
   const running = getContext('running');
   const done = getContext('done');
@@ -57,7 +57,7 @@
   
   function pickTarget () {
     target = Math.floor(Math.random() * 899) + 101;
-    dispatch('startgame');
+    onStartGame();
     worker.postMessage({ numbers: numbers.map(x => x.value), target });
   }
 
@@ -132,7 +132,7 @@
     solutions = undefined;
     sampleSolution = undefined;
 
-    dispatch('resetgame');
+    onResetGame();
   }
 
   function showSolution () {
@@ -279,9 +279,7 @@
     if (gameState.solutions) solutions = gameState.solutions;
     else {
       worker.postMessage({ numbers: numbers.map(x => x.value), target });
-      worker.addEventListener('message', e => {
-        dispatch('storesolutions', e.data);
-      }, { 'once': true });
+      worker.addEventListener('message', e => onStoreSolutions(e.data));
     }
   }
 
@@ -294,19 +292,21 @@
   <div class="board">
     <div class="left">
       <NumberSelection { numbers }
-        on:selectnumber={ e => selectNumber(e.detail) }
+        onSelectNumber={ selectNumber }
       />
     </div>
 
     <div class="right">
       <Steps bind:steps={ steps } { solved }
-        on:selectnumber={ e => selectNumber(e.detail) }
-        on:removenumber={ e => removeNumber(...e.detail) }
-        on:removeoperation={ e => removeOperation(e.detail) }
-        on:removerow={ e => removeRow(e.detail) }
+        onSelectNumber={ selectNumber }
+        onRemoveNumber={ removeNumber }
+        onRemoveOperation={ removeOperation }
+        onRemoveRow={ removeRow }
       />
 
-      <OperationPanel on:selectoperation={ e => selectOperation(e.detail) } { invalidOps } />
+      <OperationPanel { invalidOps }
+        onSelectOperation={ selectOperation }
+      />
     </div>
   </div>
 </div>
@@ -314,23 +314,36 @@
 <div class="buttons">
   { #if $done }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ showSolution } disabled={ !solutions }>{ solutions ? 'SHOW A SOLUTION' : 'SOLVING\u0133' }</button>
+      <button class="text-btn" disabled={ !solutions } onclick={ showSolution }>
+        { solutions ? 'SHOW A SOLUTION' : 'SOLVING\u0133' }
+      </button>
+
       { #if !daily }
-        <button class="text-btn" on:click={ resetGame }>RESET</button>
+        <button class="text-btn" onclick={ resetGame }>
+          RESET
+        </button>
       { /if }
     </div>
   { :else if daily && target === undefined }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ getDaily }>SHOW TODAY&CloseCurlyQuote;S NUMBERS</button>
+      <button class="text-btn" onclick={ getDaily }>
+        SHOW TODAY&CloseCurlyQuote;S NUMBERS
+      </button>
     </div>
   { :else if numbers.length < 6 }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ () => pickNumber() }>SMALL</button>
-      <button class="text-btn" on:click={ () => pickNumber(true) } disabled={ largeBin.length === 0 }>LARGE</button>
+      <button class="text-btn" onclick={ () => pickNumber() }>
+        SMALL
+      </button>
+      <button class="text-btn" disabled={ largeBin.length === 0 } onclick={ () => pickNumber(true) }>
+        LARGE
+      </button>
     </div>
   { :else if target === undefined }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ pickTarget }>GENERATE TARGET</button>
+      <button class="text-btn" onclick={ pickTarget }>
+        GENERATE TARGET
+      </button>
     </div>
   { /if }
 </div>
