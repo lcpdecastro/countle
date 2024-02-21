@@ -1,27 +1,22 @@
 <script>
   import shuffleList from 'shuffle-list';
-  import seed from 'seed-random';
-  import dayjs from 'dayjs';
 
   import { getContext, tick } from 'svelte';
-  import { fade } from 'svelte/transition';
-  import { page } from '$app/stores';
 
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-  import Target from './Target.svelte';
-  import NumberSelection from './NumberSelection.svelte';
-  import Steps from './Steps.svelte';
-  import OperationPanel from './OperationPanel.svelte';
+  import Score from '$lib/components/arcade/Score.svelte';
+  import Target from '$lib/components/numbers/Target.svelte';
+  import Skip from '$lib/components/arcade/Skip.svelte';
+  import NumberSelection from '$lib/components/numbers/NumberSelection.svelte';
+  import Steps from '$lib/components/numbers/Steps.svelte';
+  import OperationPanel from '$lib/components/numbers/OperationPanel.svelte';
 
-  let { onStartGame, onResetGame, onStoreSolutions } = $props();
+  let { onStartGame, onResetGame, onSolve } = $props();
 
   const running = getContext('running');
   const done = getContext('done');
-
-  let daily = $page.url.pathname.includes('daily');
-  if (daily) seed(dayjs().format('YYYY-MM-DD'), { global: true });
 
   class N {
     used = $state(false);
@@ -30,7 +25,71 @@
     constructor (value) {
       this.value = value;
     }
+
+    static combine (a, b, o) {
+      const inv = { '+': '-', '-': '+', '*': '/', '/': '*' };
+
+      let value;
+
+      if (o === '+') value = a.value + b.value;
+      if (o === '-') {
+        if (a.value <= b.value) return;
+        if (a.value === b.value * 2) return;
+        value = a.value - b.value;
+      }
+      if (o === '*') {
+        if (a.value === 1) return;
+        if (b.value === 1) return;
+        value = a.value * b.value;
+      }
+      if (o === '/') {
+        if (b.value === 1) return;
+        if (a.value % b.value !== 0) return;
+        if (a.value === b.value ** 2) return;
+        value = a.value / b.value;
+      }
+
+      const op1 = [];
+      const op2 = [];
+
+      if ([o, inv[o]].includes(a.steps.find(x => typeof x === 'string'))) {
+        for (let i = 0; i < a.steps.length; i += 2) {
+          if (i === 0) op1.push(a.steps[i]);
+          else {
+            if ('+*'.includes(a.steps[i - 1])) op1.push(a.steps[i]);
+            else op2.push(a.steps[i]);
+          }
+        }
+      } else op1.push(a);
+
+      if ([o, inv[o]].includes(b.steps.find(x => typeof x === 'string'))) {
+        for (let i = 0; i < b.steps.length; i += 2) {
+          if (i === 0) {
+            if ('+*'.includes(o)) op1.push(b.steps[i]);
+            else op2.push(b.steps[i]);
+          } else {
+            if (b.steps[i - 1] === o) op1.push(b.steps[i]);
+            else op2.push(b.steps[i]);
+          }
+        }
+      } else {
+        if ('+*'.includes(o)) op1.push(b);
+        else op2.push(b);
+      }
+
+      const steps = [];
+      const p = '+*'.includes(o) ? o : inv[o];
+      op1.sort(N.sort).forEach(x => { steps.push(p); steps.push(x); });
+      op2.sort(N.sort).forEach(x => { steps.push(inv[p]); steps.push(x); });
+      steps.shift();
+
+      return new N(value, steps);
+    }
   }
+
+  let difficulty = $state();
+  let score = $state();
+  let skip = $state();
 
   let smallBin = $state(shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]));
   let largeBin = $state(shuffleList([25, 50, 75, 100]));
@@ -42,23 +101,47 @@
   let solutions = $state();
   let sampleSolution = $state();
 
-  let worker = $state();
-  $effect(() => {
-    if (!worker) {
-      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
-      worker.addEventListener('message', e => solutions = e.data);
-    }
-  });
-
   function pickNumber (large = false) {
     if (large) numbers.push(new N(largeBin.pop()));
     else numbers.push(new N(smallBin.pop()));
   }
   
   function pickTarget () {
-    target = Math.floor(Math.random() * 899) + 101;
-    onStartGame();
-    worker.postMessage({ numbers: numbers.map(x => x.value), target });
+    const min = { 3: 50, 4: 100, 5: 100 };
+    const max = { 3: 500, 4: 1000, 5: 1000 };
+
+    function helper (num) {
+      if (num.length === 1) return num[0];
+
+      const shuffled = shuffleList(num);
+      const [a, b] = shuffled.slice(0, 2);
+      let newNum;
+
+      for (let o of shuffleList('+-*/'.split(''))) {
+        if (o === '+') newNum = a + b;
+        else if (o === '-') {
+          if (a > b && a !== b * 2) newNum = a - b;
+        }
+        else if (o === '*') {
+          if (a !== 1 && b !== 1) newNum = a * b;
+        }
+        else if (o === '/') {
+          if (b !== 1 && a % b === 0 && a !== b ** 2) newNum = a / b;
+        }
+        
+        if (newNum) break;
+      }
+
+      return helper(shuffled.slice(2).concat(newNum));
+    }
+
+    while (true) {
+      const t = helper(shuffleList(numbers.map(x => x.value)).slice(0, difficulty));
+      if (t > min[difficulty] && t < max[difficulty] && numbers.every(x => x !== t)) {
+        target = t;
+        break;
+      }
+    }
   }
 
   function selectNumber (x) {
@@ -121,7 +204,20 @@
     steps.splice(row, steps.length - row);
   }
 
+  async function startGame (diff) {
+    difficulty = diff;
+    while (numbers.length < 6) pickNumber(Math.random() < 0.3 && largeBin.length > 0);
+
+    await tick();
+
+    pickTarget();
+    skip.start();
+    onStartGame();
+  }
+
   function resetGame () {
+    difficulty = undefined;
+
     smallBin = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
     largeBin = shuffleList([25, 50, 75, 100]);
 
@@ -132,11 +228,9 @@
     solutions = undefined;
     sampleSolution = undefined;
 
+    score.reset();
+    skip.reset();
     onResetGame();
-  }
-
-  function showSolution () {
-    sampleSolution = solutions.solutions[Math.floor(Math.random() * solutions.solutions.length)];
   }
 
   // compute row results
@@ -221,73 +315,41 @@
 
   // determine if solved
   let solved = $derived(target && steps.at(-1)?.c?.value === target);
+  $effect(() => {
+    if (solved) {
+      for (let i = 0; i < numbers.length; i++) {
+        const n = numbers[i];
+        if (!n.used) continue;
 
-  async function getDaily () {
-    const l = Math.floor(Math.random() * 5);
-    const s = shuffleList(Array(l).fill(true).concat(Array(6 - l).fill(false)));
-    for (let x of s) pickNumber(x);
+        if (n.value > 10) {
+          largeBin.push(n.value);
+          largeBin = shuffleList(largeBin);
+        } else {
+          smallBin.push(n.value);
+          smallBin = shuffleList(smallBin);
+        }
 
-    await tick();
-    
-    pickTarget();
-  }
-
-  export function getGameState () {
-    const squares = numbers.concat(steps.filter(x => x.c).map(x => x.c));
-    const stepsAdj = steps.map(s => [squares.indexOf(s.a), s.o, squares.indexOf(s.b)]);
-
-    return {
-      numbers: numbers.map(x => x.value),
-      target,
-      steps: stepsAdj,
-      solutions: solutions
-    };
-  }
-
-  export function applyGameState (gameState) {
-    for (let x of gameState.numbers) numbers.push(new N(x));
-    target = gameState.target;
-
-    for (let s of gameState.steps) {
-      const step = {
-        a: null,
-        o: null,
-        b: null,
-        c: null
-      };
-
-      if (s[0] > -1) {
-        step.a = s[0] < 6 ? numbers[s[0]] : steps[s[0] - 6].c;
-        step.a.used = true;
+        numbers[i] = new N(((Math.random() < 0.3 && largeBin.length > 0) ? largeBin : smallBin).pop());
       }
-      if (s[1]) step.o = s[1];
-      if (s[2] > -1) {
-        step.b = s[2] < 6 ? numbers[s[2]] : steps[s[2] - 6].c;
-        step.b.used = true;
-      }
-      if (step.a && step.o && step.b) step.c = new N(
-        step.o === '\u002b' ? step.a.value + step.b.value :
-        step.o === '\u2212' ? step.a.value - step.b.value :
-        step.o === '\u00d7' ? step.a.value * step.b.value :
-        step.o === '\u00f7' ? step.a.value / step.b.value :
-        undefined
-      );
 
-      steps.push(step);
+      pickTarget();
+      steps = [];
+      score.add();
+      skip.refill();
+      onSolve(difficulty);
     }
-
-    if (gameState.solutions) solutions = gameState.solutions;
-    else {
-      worker.postMessage({ numbers: numbers.map(x => x.value), target });
-      worker.addEventListener('message', e => onStoreSolutions(e.data));
-    }
-  }
-
-  $effect(() => seed.resetGlobal);
+  });
 </script>
 
-<div class="game" inert={ !$running || solved }>
-  <Target value={ target } />
+<div class="game" inert={ !$running }>
+  <div class="top">
+    <Score bind:this={ score } />
+    <Target value={ target } />
+    <Skip bind:this={ skip } onclick={ () => {
+      pickTarget();
+      skip.refill();
+    } } />
+  </div>
 
   <div class="board">
     <div class="left">
@@ -314,49 +376,24 @@
 <div class="buttons">
   { #if $done }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" disabled={ !solutions } onclick={ showSolution }>
-        { solutions ? 'SHOW A SOLUTION' : 'SOLVING\u0133' }
-      </button>
-
-      { #if !daily }
-        <button class="text-btn" onclick={ resetGame }>
-          RESET
-        </button>
-      { /if }
-    </div>
-  { :else if daily && target === undefined }
-    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" onclick={ getDaily }>
-        SHOW TODAY&CloseCurlyQuote;S NUMBERS
+      <button class="text-btn" onclick={ resetGame }>
+        PLAY AGAIN
       </button>
     </div>
-  { :else if numbers.length < 6 }
+  { :else if !$running }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" onclick={ () => pickNumber() }>
-        SMALL
+      <button class="text-btn" onclick={ () => startGame(3) }>
+        EASY
       </button>
-      <button class="text-btn" disabled={ largeBin.length === 0 } onclick={ () => pickNumber(true) }>
-        LARGE
+      <button class="text-btn" onclick={ () => startGame(4) }>
+        MEDIUM
       </button>
-    </div>
-  { :else if target === undefined }
-    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" onclick={ pickTarget }>
-        GENERATE TARGET
+      <button class="text-btn" onclick={ () => startGame(5) }>
+        HARD
       </button>
     </div>
   { /if }
 </div>
-
-{ #if sampleSolution }
-  <div class="solution" transition:fade={ { duration: 150, easing: cssEaseIn } }>
-    <span class="a">{ solutions.diff === 0 ? sampleSolution.steps : `${sampleSolution.steps} = ${sampleSolution.value}` }</span>
-    { #if solutions.diff !== 0 }
-      <span class="b">({ solutions.diff } away)</span>
-    { /if }
-    <span class="c">({ solutions.solutions.length } solution{ solutions.solutions.length === 1 ? '' : 's' } found)</span>
-  </div>
-{ /if }
 
 <style>
   .game, .board {
@@ -366,6 +403,14 @@
 
   .game {
     flex-direction: column;
+  }
+
+  .top {
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 1fr min-content 1fr;
+    gap: 1rem;
+    align-items: center;
   }
 
   .right {
@@ -388,21 +433,5 @@
     gap: 0.5rem;
     grid-area: 1 / 1 / 2 / 2;
     backface-visibility: hidden;
-  }
-
-  .solution {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  .solution .a {
-    font-weight: bold;
-  }
-
-  .solution .c {
-    font-size: 80%;
-    font-style: italic;
   }
 </style>

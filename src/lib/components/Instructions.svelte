@@ -33,6 +33,11 @@
           Welcome to <b>Countle: Daily Numbers</b>, where your goal is to get as close as possible to a target three-digit number using six randomly selected numbers.
           Everyone in the world will get the same numbers and target everyday, but you won&CloseCurlyQuote;t know what they are until you actually start the game, so good luck!
         </p>
+      { :else if $page.url.pathname.includes('arcade') }
+        <p>
+          Welcome to <b>Countle: Arcade Numbers</b>, where your goal is to complete as many Numbers games as possible before time runs out.
+          When you successfully solve a puzzle, a new one comes out immediately, so solve them as fast as you can!
+        </p>
       { :else }
         <p>
           Welcome to <b>Countle: Numbers</b>, where your goal is to get as close as possible to a target three-digit number using six randomly selected numbers.
@@ -46,6 +51,18 @@
           Unlike a regular Numbers game, every player gets the same numbers and target for the daily Numbers games, just like how everyone in the world gets the same <i>Wordle</i> puzzle everyday.
           All you have to do is push a button to reveal them!
         </p>
+      { :else if $page.url.pathname.includes('arcade') }
+        <p>
+          Unlike a regular Numbers game, the numbers are randomly chosen across the small and large number bins.
+          Large numbers have a 30% chance of being chosen as long as there are still numbers in the large number bin.
+        </p>
+        <p>
+          Also, unlike a regular Numbers game, where the three-digit target number is selected completely at random, the targets in Arcade mode are <i>guaranteed</i> to be solvable.
+        </p>
+        <p>
+          <b>Easy</b> games guarantee an exact solution within two steps, <b>medium</b> games in three, and <b>hard</b> games in four.
+          Your solution, however, will not be limited in number of steps.
+        </p>
       { :else }
         <p>
           At the beginning of every round, you get to choose six numbers from two bins: <b>large numbers</b>, containing 25, 50, 75, and 100; and <b>small numbers</b>, containing two each of the numbers from 1 to 10.
@@ -57,9 +74,24 @@
       { /if }
 
       <h2>Game proper</h2>
-      <p>
-        Once you have your target number, you have <b>30 seconds</b> to reach it using the six random numbers that you have.
-      </p>
+      { #if $page.url.pathname.includes('arcade') }
+        <p>
+          Once the game starts, the timer will start counting down from 30 seconds.
+          For every target successfully reached, the timer will be increased by <b>5 seconds</b> (easy), <b>10 seconds</b> (medium), or <b>15 seconds</b> (hard).
+        </p>
+        <p>
+          Any numbers used in your solution will be returned to their respective bins and replaced with newly picked numbers.
+          A new target will also be generated.
+        </p>
+        <p>
+          Additionally, if you&CloseCurlyQuote;re having difficulty with a certain target, a <b>skip button</b> is available that will change it.
+          Keep in mind, however, that the skip button will only be available <b>5 seconds after</b> receiving a new target.
+        </p>
+      { :else }
+        <p>
+          Once you have your target number, you have <b>30 seconds</b> to reach it using the six random numbers that you have.
+        </p>
+      { /if }
       <p>
         You may only use the four basic mathematical operations (addition, subtraction, multiplication, and division), and you may only use the numbers as many times as you have them.
         You are also prohibited from making any value that is less than 1 or not a whole number.
@@ -71,22 +103,24 @@
         { @render dailyNote() }
       { /if }
 
-      <h2>Solutions</h2>
-      <p>
-        Once your time is up, the game will allow you to look through the solutions that it has computed, as well as how many of them there are.
-      </p>
-      <p>
-        Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
-        If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
-      </p>
-      <p>
-        Note that solutions are computed by the game on your device without calling any other external websites.
-        This allows the game to work even without an internet connection.
-      </p>
-      <p>
-        Unfortunately, this means that slower devices may take a while to find all possible solutions to some games.
-        The solution finder has been optimized to find solutions as quickly (but still as accurately) as possible; however, the nature of the solution-finding process may make the algorithm run slowly on less performant devices.
-      </p>
+      { #if !$page.url.pathname.includes('arcade') }
+        <h2>Solutions</h2>
+        <p>
+          Once your time is up, the game will allow you to look through the solutions that it has computed, as well as how many of them there are.
+        </p>
+        <p>
+          Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
+          If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
+        </p>
+        <p>
+          Note that solutions are computed by the game on your device without calling any other external websites.
+          This allows the game to work even without an internet connection.
+        </p>
+        <p>
+          Unfortunately, this means that slower devices may take a while to find all possible solutions to some games.
+          The solution finder has been optimized to find solutions as quickly (but still as accurately) as possible; however, the nature of the solution-finding process may make the algorithm run slowly on less performant devices.
+        </p>
+      { /if }
     { :else if $page.url.pathname.includes('letters') }
       { #if $page.url.pathname.includes('daily') }
         <p>

@@ -4,7 +4,11 @@
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-  let { value, used = false, valid = true, size = "3rem", solved = false, onclick } = $props();
+  let { data, solved, size = "3rem", onclick } = $props();
+
+  let value = $derived(data?.value);
+  let used = $derived(data?.used);
+  let valid = $derived(data?.valid);
 
   let canvas = $state();
   let span = $state();

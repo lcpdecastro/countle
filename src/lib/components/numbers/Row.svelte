@@ -8,26 +8,26 @@
   import OutlineSquare from '../OutlineSquare.svelte';
   import Operation from './Operation.svelte';
 
-  let { value, solved = false, onRemoveNumber, onRemoveOperation, onSelectNumber, onRemoveRow } = $props();
+  let { data, solved = false, onRemoveNumber, onRemoveOperation, onSelectNumber, onRemoveRow } = $props();
 </script>
 
 <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-  <OutlineSquare value={ value?.a?.value }
+  <OutlineSquare value={ data?.a?.value }
     onclick={ () => onRemoveNumber('a') }
   />
 
-  <Operation value={ value?.o }
+  <Operation value={ data?.o }
     onclick={ onRemoveOperation }
   />
 
-  <OutlineSquare value={ value?.b?.value }
+  <OutlineSquare value={ data?.b?.value }
     onclick={ () => onRemoveNumber('b') }
   />
 
   <Operation value="=" />
 
-  <Square value={ value?.c?.value } used={ value?.c?.used } valid={ value?.c?.valid } { solved }
-    onclick={ () => onSelectNumber(value.c) }
+  <Square data={ data?.c } { solved }
+    onclick={ () => onSelectNumber(data.c) }
   />
   
   <button

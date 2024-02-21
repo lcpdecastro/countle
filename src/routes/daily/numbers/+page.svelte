@@ -17,14 +17,8 @@
   setContext('done', done);
 
   function startGame () {
+    timer.start();
     $running = true;
-
-    timer.start().then(() => {
-      $running = false;
-      $done = true;
-
-      $daily['numbers'] = game.getGameState();
-    });
   }
 
   let dailyApplied = $state(false);
@@ -50,7 +44,13 @@
 
 <svelte:window onbeforeunload={ forfeit } />
 
-<Timer duration={ 30 } bind:this={ timer } />
+<Timer duration={ 30 } bind:this={ timer }
+  onTimerDone={ () => {
+    $running = false;
+    $done = true;
+    $daily['numbers'] = game.getGameState();
+  } }
+/>
 
 <Numbers
   onStartGame={ startGame }

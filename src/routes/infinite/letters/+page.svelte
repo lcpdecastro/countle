@@ -14,21 +14,22 @@
   setContext('done', done);
 
   function startGame () {
+    timer.start();
     $running = true;
-
-    timer.start().then(() => {
-      $running = false;
-      $done = true;
-    });
   }
 
   function resetGame () {
-    timer.reset()
+    timer.reset();
     $done = false;
   }
 </script>
 
-<Timer duration={ 30 } bind:this={ timer } />
+<Timer duration={ 30 } bind:this={ timer }
+  onTimerDone={ () => {
+    $running = false;
+    $done = true;
+  } }
+/>
 
 <Letters
   onStartGame={ startGame }
