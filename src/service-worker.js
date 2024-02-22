@@ -10,6 +10,8 @@ const ASSETS = [
   '/daily/numbers',
   '/infinite/letters',
   '/infinite/numbers',
+  '/arcade/letters',
+  '/arcade/numbers',
   'https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&display=swap',
   'https://fonts.gstatic.com/s/worksans/v19/QGYsz_wNahGAdqQ43Rh_fKDp.woff2'
 ];
