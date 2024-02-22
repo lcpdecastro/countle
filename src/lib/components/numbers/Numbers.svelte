@@ -257,10 +257,15 @@
 
   // compute step results + mark operations / numbers as valid
   $effect(() => {
+    if (solved) {
+      for (let o in validOps) validOps[o] = false;
+      return;
+    }
+
     const lastStep = steps.at(-1);
     const allNumbers = numbers.concat(steps.filter(x => x.c).map(x => x.c)).filter(x => !x.used);
 
-    if (!lastStep) {
+    if (!lastStep || steps?.[5]?.c) {
       for (let o in validOps) validOps[o] = false;
       for (let n of allNumbers) n.valid = true;
       return;
@@ -281,6 +286,10 @@
       }
     }
     else {
+      if (!lastStep.c) {
+        for (let o in validOps) validOps[o] = false;
+      }
+      
       if (lastStep.a && lastStep.b && !lastStep.c) {
         lastStep.c = combine(lastStep.a, lastStep.b, lastStep.o);
         for (let o in validOps) validOps[o] = steps.length === 5 ? false : allNumbers.some(n => combine(lastStep.c, n, o) !== null);
@@ -376,6 +385,7 @@
   onTimerDone={ () => {
     running = false;
     done = true;
+    for (let o in validOps) validOps[o] = false;
 
     if (gameMode === 'daily') saveDaily();
     if (gameMode === 'arcade') {

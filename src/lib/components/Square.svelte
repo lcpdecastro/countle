@@ -56,6 +56,7 @@
     border-radius: 30%;
     transition-property: transform, filter, opacity, background;
     transition-duration: 0.15s;
+    overflow: hidden;
   }
 
   button:not(:disabled):hover {

@@ -16,7 +16,7 @@
       <b>IMPORTANT NOTE</b>
     </p>
     <p>
-      If you abandon a Daily game by reloading or visiting a different page while the timer is running, your game will be <b>forfeited</b> in its current state!
+      If you abandon a Daily game by reloading or visiting a different page while the timer is running, your game will be saved in its current state and will <b>no longer</b> be playable!
     </p>
   </span>
 { /snippet }
@@ -35,8 +35,8 @@
         </p>
       { :else if $page.url.pathname.includes('arcade') }
         <p>
-          Welcome to <b>Countle: Arcade Numbers</b>, where your goal is to complete as many Numbers games as possible before time runs out.
-          When you successfully solve a puzzle, a new one comes out immediately, so solve them as fast as you can!
+          Welcome to <b>Countle: Arcade Numbers</b>, where your goal is to complete as many Numbers rounds as possible before time runs out.
+          When you successfully solve a round, a new one comes out immediately, so solve them as fast as you can!
         </p>
       { :else }
         <p>
@@ -62,6 +62,9 @@
         <p>
           <b>Easy</b> games guarantee an exact solution within two steps, <b>medium</b> games in three, and <b>hard</b> games in four.
           Your solution, however, will not be limited in number of steps.
+        </p>
+        <p>
+          Also note that for easy games, the targets generated will be between 51 and 499, instead of the original 101 to 999.
         </p>
       { :else }
         <p>
@@ -103,24 +106,25 @@
         { @render dailyNote() }
       { /if }
 
-      { #if !$page.url.pathname.includes('arcade') }
-        <h2>Solutions</h2>
-        <p>
-          Once your time is up, the game will allow you to look through the solutions that it has computed, as well as how many of them there are.
-        </p>
-        <p>
-          Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
-          If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
-        </p>
-        <p>
-          Note that solutions are computed by the game on your device without calling any other external websites.
-          This allows the game to work even without an internet connection.
-        </p>
-        <p>
-          Unfortunately, this means that slower devices may take a while to find all possible solutions to some games.
-          The solution finder has been optimized to find solutions as quickly (but still as accurately) as possible; however, the nature of the solution-finding process may make the algorithm run slowly on less performant devices.
-        </p>
-      { /if }
+      <h2>Solutions</h2>
+      <p>
+        Once your time is up, the game will allow you to look through the solutions that it has computed, as well as how many of them there are.
+        { #if $page.url.pathname.includes('arcade') }
+          For Arcade mode, the game will only show solutions for the last round left unfinished, and the game will only compute for solutions once the timer runs out.
+        { /if }
+      </p>
+      <p>
+        Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
+        If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
+      </p>
+      <p>
+        Note that solutions are computed by the game on your device without calling any other external websites.
+        This allows the game to work even without an internet connection.
+      </p>
+      <p>
+        Unfortunately, this means that slower devices may take a while to find all possible solutions to some games.
+        The solution finder has been optimized to find solutions as quickly (but still as accurately) as possible; however, the nature of the solution-finding process may make the algorithm run slowly on less performant devices.
+      </p>
     { :else if $page.url.pathname.includes('letters') }
       { #if $page.url.pathname.includes('daily') }
         <p>
