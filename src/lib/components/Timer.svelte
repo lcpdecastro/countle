@@ -3,16 +3,17 @@
   
   import { cssEaseIn } from '$lib/js/cssEase.js';
 
-  let { duration, onTimerDone } = $props();
+  let { onTimerDone } = $props();
 
-  let store = tweened(duration);
+  let store = tweened(30);
+  let donePromise = $state();
 
   export function start () {
-    store.set(0, { duration: duration * 1000 });
+    donePromise = store.set(0, { duration: 30000 });
   }
 
   export function reset () {
-    store.set(duration, { duration: 150, easing: cssEaseIn });
+    store.set(30, { duration: 150, easing: cssEaseIn });
   }
   
   export function drain () {
@@ -21,19 +22,19 @@
 
   export function add (amount) {
     store.set($store + amount - 0.15, { duration: 150, easing: cssEaseIn })
-    .then(() => store.set(0, { duration: $store * 1000 }));
+    .then(() => donePromise = store.set(0, { duration: $store * 1000 }));
   }
 
   $effect(() => reset);
 
   $effect(() => {
-    if ($store === 0) onTimerDone();
+    donePromise?.then?.(onTimerDone);
   });
 </script>
 
 <div class="wrapper" class:red={ $store <= 5 } class:yellow={ $store > 30 }>
   <div class="timer">
-    <div class="inner" style:transform="translateX({ Math.min((1 - $store / duration) * -100, 0) }%)"/>
+    <div class="inner" style:transform="translateX({ Math.min((1 - $store / 30) * -100, 0) }%)"/>
   </div>
 
   <span>{ Math.ceil($store).toString().padStart(2, '0') }</span>

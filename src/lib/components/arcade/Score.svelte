@@ -11,7 +11,7 @@
 </script>
 
 <div class="wrapper">
-  <span class="score">{ Math.ceil(score).toString().padStart(2, '0') }</span>
+  <span class="score">{ score }</span>
   <span>SOLVED</span>
 </div>
 

@@ -1,13 +1,9 @@
 <script>
-  import { getContext } from 'svelte';
   import { tweened } from 'svelte/motion';
 
   import { cssEaseIn } from '$lib/js/cssEase.js';
 
   let { onclick } = $props();
-
-  let running = getContext('running');
-  let done = getContext('done');
 
   let countdown = tweened(-100);
 
@@ -22,18 +18,21 @@
 
   export function reset () {
     countdown.set(-100, { duration: 150, easing: cssEaseIn });
+    frozen = false;
   }
 
-  $effect(() => {
-    if ($done) countdown.set($countdown, { duration: 0 });
-  });
+  let frozen = $state(false);
+  export function freeze () {
+    countdown.set($countdown, { duration: 0 });
+    frozen = true;
+  }
 </script>
 
 <div class="wrapper">
-  <button class="text-btn" disabled={ $countdown < 0 || !$running || $done } { onclick }>
+  <button class="text-btn" disabled={ $countdown < 0 || frozen } onclick={ () => { refill(); onclick(); } }>
     <span>SKIP</span>
   </button>
-  <div class="countdown" class:frozen={ $done }>
+  <div class="countdown" class:frozen>
     <div class="inner" style:transform="translateX({ $countdown }%)" />
   </div>
 </div>
