@@ -8,14 +8,12 @@
 
   let value = $derived(data?.value);
   let used = $derived(data?.used);
-  let valid = $derived(data?.valid);
+  let invalid = $derived(data?.valid === false);
 
   let canvas = $state();
   let span = $state();
 
   let textScale = $state(1);
-
-  let invalid = $derived(valid === false);
 
   $effect(() => {
     const ctx = canvas.getContext('2d');

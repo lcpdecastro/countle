@@ -228,92 +228,70 @@
         numbers[i] = new N(((Math.random() < 0.3 && largeBin.length > 0) ? largeBin : smallBin).pop());
       }
 
-      pickArcadeTarget();
       removeRow(0);
       score.add();
       skip.refill();
+      pickArcadeTarget();
       timer.add((arcadeDifficulty - 2) * 5);
     }
   });
 
-  // compute row results
-  $effect(() => {
-    if (steps.length > 0) {
-      if (steps.at(-1).a && steps.at(-1).o && steps.at(-1).b) {
-        steps.at(-1).c = new N(
-          steps.at(-1).o === '\u002b' ? steps.at(-1).a.value + steps.at(-1).b.value :
-          steps.at(-1).o === '\u2212' ? steps.at(-1).a.value - steps.at(-1).b.value :
-          steps.at(-1).o === '\u00d7' ? steps.at(-1).a.value * steps.at(-1).b.value :
-          steps.at(-1).o === '\u00f7' ? steps.at(-1).a.value / steps.at(-1).b.value :
-          undefined
-        );
-      } else steps.at(-1).c = null;
-    }
-  });
-  
-  // mark invalid numbers
-  $effect(() => {
-    for (let x of numbers.concat(steps.filter(y => y.c).map(y => y.c))) {
-      if (x.used) continue;
+  function combine (a, b, o) {
+    const av = a.value;
+    const bv = b.value;
 
-      x.valid = true;
+    if (o === '\u002b') return new N(av + bv);
+    if (o === '\u2212' && av > bv && av !== bv * 2) return new N(av - bv);
+    if (o === '\u00d7' && av !== 1 && bv !== 1) return new N(av * bv);
+    if (o === '\u00f7' && bv !== 1 && av % bv === 0 && av !== bv ** 2) return new N(av / bv);
 
-      if (steps.at(-1) && !steps.at(-1).c) {
-        const { a, b, o } = steps.at(-1);
+    return null;
+  }
 
-        if (o === '\u2212') {
-          if (a && (x.value >= a.value || a.value === x.value * 2)) x.valid = false;
-          else if (b && (x.value <= b.value || x.value === b.value * 2)) x.valid = false;
-        }
-        else if (o === '\u00d7') {
-          if (x.value === 1) x.valid = false;
-        }
-        else if (o === '\u00f7') {
-          if (x.value === 1) x.valid = false;
-          else if (a && (a.value % x.value !== 0 || a.value === x.value ** 2)) x.valid = false;
-          else if (b && (x.value % b.value !== 0 || x.value === b.value ** 2)) x.valid = false;
-        }
-      }
-    }
+  let validOps = $state({
+    '\u002b': false,
+    '\u2212': false,
+    '\u00d7': false,
+    '\u00f7': false
   });
 
-  let invalidOps = $state({
-    '\u002b': true,
-    '\u2212': true,
-    '\u00d7': true,
-    '\u00f7': true
-  });
-
-  // mark invalid operations
+  // compute step results + mark operations / numbers as valid
   $effect(() => {
-    if (target === undefined || steps.length === 0 || solved || done || ((steps.at(-1).a !== null) !== (steps.at(-1).b !== null) && steps.at(-1).o) || (steps.length === 5 && steps.at(-1).c)) {
-      invalidOps['\u002b'] = true;
-      invalidOps['\u2212'] = true;
-      invalidOps['\u00d7'] = true;
-      invalidOps['\u00f7'] = true;
-    } else {
-      invalidOps['\u002b'] = false;
-      invalidOps['\u2212'] = false;
-      invalidOps['\u00d7'] = false;
-      invalidOps['\u00f7'] = false;
+    const lastStep = steps.at(-1);
+    const allNumbers = numbers.concat(steps.filter(x => x.c).map(x => x.c)).filter(x => !x.used);
 
-      if (steps.at(-1)?.a && steps.at(-1)?.b && !steps.at(-1)?.c) {
-        const a = steps.at(-1).a.value;
-        const b = steps.at(-1).b.value;
+    if (!lastStep) {
+      for (let o in validOps) validOps[o] = false;
+      for (let n of allNumbers) n.valid = true;
+      return;
+    }
 
-        invalidOps['\u2212'] = a <= b || a === b * 2;
-        invalidOps['\u00d7'] = a === 1 || b === 1;
-        invalidOps['\u00f7'] = b === 1 || a % b !== 0 || a === b * b;
-      }
-      else if (steps.at(-1)?.c) {
-        const c = steps.at(-1).c.value;
-        const x = numbers.filter(y => !y.used).concat(steps.filter(y => y !== steps.at(-1) && y.c && !y.c.used).map(y => y.c)).map(y => y.value);
+    if (lastStep.c) {
+      for (let n of allNumbers) n.valid = true;
+    }
+    
+    if (!lastStep.o) {
+      lastStep.c = null;
+      for (let n of allNumbers) n.valid = true;
 
-        invalidOps['\u2212'] = x.every(y => c <= y || c === y * 2);
-        invalidOps['\u00d7'] = x.every(y => c === 1 || y === 1);
-        invalidOps['\u00f7'] = x.every(y => y === 1 || c % y !== 0 || c === y ** 2);
+      if (lastStep.a && lastStep.b) {
+        for (let o in validOps) validOps[o] = combine(lastStep.a, lastStep.b, o) !== null;
+      } else {
+        for (let o in validOps) validOps[o] = allNumbers.some(n => combine(lastStep.a ?? n, lastStep.b ?? n, o) !== null);
       }
     }
+    else {
+      if (lastStep.a && lastStep.b && !lastStep.c) {
+        lastStep.c = combine(lastStep.a, lastStep.b, lastStep.o);
+        for (let o in validOps) validOps[o] = steps.length === 5 ? false : allNumbers.some(n => combine(lastStep.c, n, o) !== null);
+      }
+      else if (!lastStep.a || !lastStep.b) {
+        lastStep.c = null;
+        for (let n of allNumbers) n.valid = combine(lastStep.a ?? n, lastStep.b ?? n, lastStep.o) !== null;
+      }
+    }
+
+    console.log(allNumbers.map(x => [x.value, x.valid]));
   });
 
   function getDaily () {
@@ -433,14 +411,14 @@
     </div>
 
     <div class="right">
-      <Steps bind:steps={ steps } { solved }
+      <Steps { steps } { solved }
         onSelectNumber={ selectNumber }
         onRemoveNumber={ removeNumber }
         onRemoveOperation={ removeOperation }
         onRemoveRow={ removeRow }
       />
 
-      <OperationPanel { invalidOps }
+      <OperationPanel { validOps }
         onSelectOperation={ selectOperation }
       />
     </div>
