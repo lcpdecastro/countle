@@ -42,6 +42,7 @@
     display: flex;
     gap: 0.5rem;
     backface-visibility: hidden;
+    overflow: hidden;
   }
 
   button {
