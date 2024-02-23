@@ -8,8 +8,8 @@
     score = 0;
   }
 
-  export function add () {
-    score++;
+  export function add (x = 1) {
+    score += x;
   }
 </script>
 
@@ -19,7 +19,7 @@
       <span class="score" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>{ score }</span>
     { /key }
   </div>
-  <span>SOLVED</span>
+  <span>SCORE</span>
 </div>
 
 <style>

@@ -1,5 +1,5 @@
 <script>
-  import Row from './Row.svelte';
+  import Row from '$lib/components/numbers/Row.svelte';
 
   let { steps, solved = false, onSelectNumber, onRemoveNumber, onRemoveOperation, onRemoveRow } = $props();
 </script>

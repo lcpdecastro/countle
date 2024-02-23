@@ -1,16 +1,12 @@
 <script>
-  import { getContext } from "svelte";
-
   import dictionary from '$lib/js/dictionary.js';
 
   import Backspace from "lucide-svelte/icons/delete";
   import Trash from "lucide-svelte/icons/trash-2";
 
-  const running = getContext('running');
+  let { input = [], active, onRemoveLetter, onClearWord } = $props();
 
-  let { value = [], onRemoveLetter, onClearWord } = $props();
-
-  let word = $derived(value.map(x => x.value).join(''));
+  let word = $derived(input.map(x => x.value).join(''));
 </script>
 
 <div class="wrapper" class:invalid={ word.length > 0 && (word.length < 3 || !dictionary.has(word.toLowerCase())) } class:full={ word.length === 9 && dictionary.has(word.toLowerCase()) }>
@@ -18,12 +14,12 @@
     { word || '\u00a0' }
   </div>
 
-  <button class="icon-btn backspace" disabled={ !$running }
+  <button class="icon-btn backspace" disabled={ !active }
     onclick={ onRemoveLetter }
   >
     <Backspace strokeWidth="0.075rem" size="100%" />
   </button>
-  <button class="icon-btn delete" disabled={ !$running }
+  <button class="icon-btn delete" disabled={ !active }
     onclick={ onClearWord }
   >
     <Trash strokeWidth="0.075rem" size="100%" />

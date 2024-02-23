@@ -1,8 +1,9 @@
 <script>
   import Help from 'lucide-svelte/icons/help-circle';
-  import Alert from 'lucide-svelte/icons/alert-triangle';
+  import AlertTriangle from 'lucide-svelte/icons/alert-triangle';
+  import AlertCircle from 'lucide-svelte/icons/alert-circle';
 
-  import Dialog from './Dialog.svelte';
+  import Dialog from '$lib/components/Dialog.svelte';
 
   import { page } from '$app/stores';
 
@@ -10,9 +11,9 @@
 </script>
 
 { #snippet dailyNote() }
-  <span class="daily-note">
-    <p class="alert-title">
-      <Alert size="1rem" />
+  <span class="note note-red">
+    <p class="note-title">
+      <AlertTriangle size="1rem" />
       <b>IMPORTANT NOTE</b>
     </p>
     <p>
@@ -57,15 +58,27 @@
           Large numbers have a 30% chance of being chosen as long as there are still numbers in the large number bin.
         </p>
         <p>
-          Also, unlike a regular Numbers game, where the three-digit target number is selected completely at random, the targets in Arcade mode are <i>guaranteed</i> to be solvable.
+          Also, unlike a regular Numbers game, where the target is selected completely at random, the targets in Arcade mode are <i>guaranteed</i> to be solvable.
         </p>
         <p>
           <b>Easy</b> games guarantee an exact solution within two steps, <b>medium</b> games in three, and <b>hard</b> games in four.
           Your solution, however, will not be limited in number of steps.
         </p>
-        <p>
-          Also note that for easy games, the targets generated will be between 51 and 499, instead of the original 101 to 999.
-        </p>
+        <span class="note note-yellow">
+          <p class="note-title">
+            <AlertCircle size="1rem" />
+            <b>NOTE</b>
+          </p>
+          <p>
+            As much as possible, the game will try to randomly generate a reachable target between 101 and 999.
+            However, this may not always be possible, especially in easy mode.
+            As such, easy mode targets will try to be generated between 51 and 499 instead.
+          </p>
+          <p>
+            The game will try to generate targets within these limits a few times.
+            If it can&CloseCurlyQuote;t, the last target it generates will be the new target regardless.
+          </p>
+        </span>
       { :else }
         <p>
           At the beginning of every round, you get to choose six numbers from two bins: <b>large numbers</b>, containing 25, 50, 75, and 100; and <b>small numbers</b>, containing two each of the numbers from 1 to 10.
@@ -80,7 +93,7 @@
       { #if $page.url.pathname.includes('arcade') }
         <p>
           Once the game starts, the timer will start counting down from 30 seconds.
-          For every target successfully reached, the timer will be increased by <b>5 seconds</b> (easy), <b>10 seconds</b> (medium), or <b>15 seconds</b> (hard).
+          For every target successfully reached, the timer will be increased by <b>5 seconds</b> (easy), <b>7.5 seconds</b> (medium), or <b>10 seconds</b> (hard).
         </p>
         <p>
           Any numbers used in your solution will be returned to their respective bins and replaced with newly picked numbers.
@@ -88,11 +101,11 @@
         </p>
         <p>
           Additionally, if you&CloseCurlyQuote;re having difficulty with a certain target, a <b>skip button</b> is available that will change it.
-          Keep in mind, however, that the skip button will only be available <b>5 seconds after</b> receiving a new target.
+          This button will be available <b>5 seconds after</b> receiving a new target.
         </p>
       { :else }
         <p>
-          Once you have your target number, you have <b>30 seconds</b> to reach it using the six random numbers that you have.
+          Once you have your target, you have <b>30 seconds</b> to reach it using the six random numbers that you have.
         </p>
       { /if }
       <p>
@@ -109,21 +122,20 @@
       <h2>Solutions</h2>
       <p>
         Once your time is up, the game will allow you to look through the solutions that it has computed, as well as how many of them there are.
-        { #if $page.url.pathname.includes('arcade') }
-          For Arcade mode, the game will only show solutions for the last round left unfinished, and the game will only compute for solutions once the timer runs out.
-        { /if }
       </p>
-      <p>
-        Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
-        If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
-      </p>
+      { #if !$page.url.pathname.includes('arcade') }
+        <p>
+          Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
+          If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
+        </p>
+      { /if }
       <p>
         Note that solutions are computed by the game on your device without calling any other external websites.
         This allows the game to work even without an internet connection.
       </p>
       <p>
         Unfortunately, this means that slower devices may take a while to find all possible solutions to some games.
-        The solution finder has been optimized to find solutions as quickly (but still as accurately) as possible; however, the nature of the solution-finding process may make the algorithm run slowly on less performant devices.
+        The solver has been optimized to find solutions as quickly (but still as completely) as possible; however, the nature of the solution-finding process may make the algorithm run slowly on less performant devices.
       </p>
     { :else if $page.url.pathname.includes('letters') }
       { #if $page.url.pathname.includes('daily') }
@@ -196,17 +208,38 @@
     align-self: center;
   }
 
-  .daily-note {
-    padding: 0.4rem 0.6rem;
-    border: 0.075rem solid var(--colar-red-8);
+  .note {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 0.5rem;
     border-radius: 0.6rem;
+  }
+
+  .note-red {
+    border: 0.075rem solid var(--colar-red-8);
     background: var(--colar-red-0);
     color: var(--colar-red-8);
   }
 
-  .alert-title {
+  .note-yellow {
+    border: 0.075rem solid var(--colar-yellow-8);
+    background: var(--colar-yellow-0);
+    color: var(--colar-yellow-8);
+  }
+
+  .note-title {
+    padding-bottom: 0.5rem;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+
+  .note-yellow .note-title {
+    border-bottom: 0.075rem solid var(--colar-yellow-6);
+  }
+
+  .note-red .note-title {
+    border-bottom: 0.075rem solid var(--colar-red-6);
   }
 </style>

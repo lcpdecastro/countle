@@ -3,7 +3,7 @@
   import seed from 'seed-random';
   import dayjs from 'dayjs';
 
-  import { tick, onMount, onDestroy } from 'svelte';
+  import { tick, onMount, onDestroy, unstate } from 'svelte';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
 
@@ -47,12 +47,34 @@
   let sampleSolution = $state();
 
   let worker = $state();
-  $effect(() => {
-    if (!worker) {
-      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
-      worker.addEventListener('message', e => solutions = e.data);
-    }
-  });
+
+  async function solve () {
+    const currNumbers = unstate(numbers).map(x => x.value);
+    const currTarget = unstate(target);
+
+    worker.postMessage({ numbers: currNumbers, target: currTarget });
+
+    solutions = await new Promise(resolve => {
+      function handler (e) {
+        if (currTarget !== target || currNumbers.some((_, i, a) => a[i] !== numbers[i].value)) {
+          worker.removeEventListener('message', handler);
+          return;
+        }
+
+        const data = e.data;
+        if (data.target === currTarget && data.numbers.every((_, i, a) => a[i] === currNumbers[i])) {
+          resolve({
+            solutions: data.solutions,
+            diff: data.diff
+          });
+          
+          worker.removeEventListener('message', handler);
+        }
+      }
+
+      worker.addEventListener('message', handler);
+    });
+  }
 
   function pickNumber (large = false) {
     if (large) numbers.push(new N(largeBin.pop()));
@@ -61,9 +83,8 @@
   
   function pickTarget () {
     target = Math.floor(Math.random() * 899) + 101;
+    solve();
     startGame();
-
-    worker.postMessage({ numbers: numbers.map(x => x.value), target });
   }
 
   function selectNumber (x) {
@@ -156,86 +177,6 @@
     sampleSolution = solutions.solutions[Math.floor(Math.random() * solutions.solutions.length)];
   }
 
-  let arcadeDifficulty = $state();
-  let score = $state();
-  let skip = $state();
-
-  function pickArcadeTarget () {
-    const min = { 3: 50, 4: 100, 5: 100 };
-    const max = { 3: 500, 4: 1000, 5: 1000 };
-
-    function helper (num) {
-      if (num.length === 1) return num[0];
-
-      const shuffled = shuffleList(num);
-      const [a, b] = shuffled.slice(0, 2);
-      let newNum;
-
-      for (let o of shuffleList('+-*/'.split(''))) {
-        if (o === '+') newNum = a + b;
-        else if (o === '-') {
-          if (a > b && a !== b * 2) newNum = a - b;
-        }
-        else if (o === '*') {
-          if (a !== 1 && b !== 1) newNum = a * b;
-        }
-        else if (o === '/') {
-          if (b !== 1 && a % b === 0 && a !== b ** 2) newNum = a / b;
-        }
-        
-        if (newNum) break;
-      }
-
-      return helper(shuffled.slice(2).concat(newNum));
-    }
-
-    while (true) {
-      const t = helper(shuffleList(numbers.map(x => x.value)).slice(0, arcadeDifficulty));
-      if (t > min[arcadeDifficulty] && t < max[arcadeDifficulty] && numbers.every(x => x !== t)) {
-        target = t;
-        break;
-      }
-    }
-  }
-
-  function startArcade (diff) {
-    arcadeDifficulty = diff;
-    while (numbers.length < 6) pickNumber(Math.random() < 0.3 && largeBin.length > 0);
-
-    tick().then(() => {
-      pickArcadeTarget();
-      startGame();
-      skip.start();
-    });
-  }
-
-  // determine if solved
-  let solved = $derived(target && steps.at(-1)?.c?.value === target);
-  $effect(() => {
-    if (gameMode === 'arcade' && solved) {
-      for (let i = 0; i < numbers.length; i++) {
-        const n = numbers[i];
-        if (!n.used) continue;
-
-        if (n.value > 10) {
-          largeBin.push(n.value);
-          largeBin = shuffleList(largeBin);
-        } else {
-          smallBin.push(n.value);
-          smallBin = shuffleList(smallBin);
-        }
-
-        numbers[i] = new N(((Math.random() < 0.3 && largeBin.length > 0) ? largeBin : smallBin).pop());
-      }
-
-      removeRow(0);
-      score.add();
-      skip.refill();
-      pickArcadeTarget();
-      timer.add((arcadeDifficulty - 2) * 5);
-    }
-  });
-
   function combine (a, b, o) {
     const av = a.value;
     const bv = b.value;
@@ -299,9 +240,96 @@
         for (let n of allNumbers) n.valid = combine(lastStep.a ?? n, lastStep.b ?? n, lastStep.o) !== null;
       }
     }
-
-    console.log(allNumbers.map(x => [x.value, x.valid]));
   });
+
+  // determine if solved
+  let solved = $derived(target && steps.at(-1)?.c?.value === target);
+  $effect(() => {
+    if (gameMode === 'arcade' && solved) {
+      for (let i = 0; i < numbers.length; i++) {
+        const n = numbers[i];
+        if (!n.used) continue;
+
+        if (n.value > 10) {
+          largeBin.push(n.value);
+          largeBin = shuffleList(largeBin);
+        } else {
+          smallBin.push(n.value);
+          smallBin = shuffleList(smallBin);
+        }
+
+        numbers[i] = new N(((Math.random() < 0.3 && largeBin.length > 0) ? largeBin : smallBin).pop());
+      }
+
+      removeRow(0);
+      score.add();
+      skip.refill();
+      pickArcadeTarget();
+      timer.add(5 + (arcadeDifficulty - 3) * 2.5);
+    }
+  });
+
+  /* === ARCADE MODE === */
+
+  let arcadeDifficulty = $state();
+  let score = $state();
+  let skip = $state();
+
+  function pickArcadeTarget () {
+    const min = { 3: 50, 4: 100, 5: 100 };
+    const max = { 3: 500, 4: 1000, 5: 1000 };
+
+    function helper (num) {
+      if (num.length === 1) return num[0];
+
+      const shuffled = shuffleList(num);
+      const [a, b] = shuffled.slice(0, 2);
+      let newNum;
+
+      for (let o of shuffleList('+-*/'.split(''))) {
+        if (o === '+') newNum = a + b;
+        else if (o === '-') {
+          if (a > b && a !== b * 2) newNum = a - b;
+        }
+        else if (o === '*') {
+          if (a !== 1 && b !== 1) newNum = a * b;
+        }
+        else if (o === '/') {
+          if (b !== 1 && a % b === 0 && a !== b ** 2) newNum = a / b;
+        }
+        
+        if (newNum) break;
+      }
+
+      return helper(shuffled.slice(2).concat(newNum));
+    }
+
+    let i = 0;
+    while (true) {
+      const t = helper(shuffleList(numbers.map(x => x.value)).slice(0, arcadeDifficulty));
+      const x = t !== target && numbers.every(n => n.value !== t);
+      if (i === 9 || (t > min[arcadeDifficulty] && t < max[arcadeDifficulty] && x)) {
+        target = t;
+        solutions = undefined;
+        solve();
+        break;
+      }
+      if (x) i++;
+    }
+  }
+
+  function startArcade (diff) {
+    arcadeDifficulty = diff;
+    while (numbers.length < 6) pickNumber(Math.random() < 0.3 && largeBin.length > 0);
+
+    tick().then(() => {
+      pickArcadeTarget();
+      startGame();
+      skip.start();
+    });
+  }
+
+  /* === DAILY MODE === */
 
   function getDaily () {
     const l = Math.floor(Math.random() * 5);
@@ -358,13 +386,16 @@
     }
 
     if (gameState.solutions) solutions = gameState.solutions;
-    else {
-      worker.postMessage({ numbers: numbers.map(x => x.value), target });
-      worker.addEventListener('message', e => solutions = e.data);
-    }
+    else solve();
   }
 
+  /* === LIFECYCLE === */
+
   onMount(() => {
+    if (gameMode !== 'daily' || (gameMode === 'daily' && !$dailyStore?.['numbers']?.['solutions'])) {
+      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+    }
+
     if (gameMode === 'daily' && $dailyStore['date'] === dayjs().format('YYYY-MM-DD') && 'numbers' in $dailyStore) {
       applyDaily();
       done = true;
@@ -373,13 +404,15 @@
   });
 
   onDestroy(() => {
-    if (gameMode === 'daily') seed.resetGlobal()
+    if (gameMode === 'daily') seed.resetGlobal();
   });
 </script>
 
-<svelte:window onbeforeunload={ () => {
-  if (gameMode === 'daily' && running) saveDaily();
-} } />
+<svelte:window
+  onbeforeunload={ () => {
+    if (gameMode === 'daily' && running) saveDaily();
+  } }
+/>
 
 <Timer bind:this={ timer }
   onTimerDone={ () => {
@@ -388,10 +421,7 @@
     for (let o in validOps) validOps[o] = false;
 
     if (gameMode === 'daily') saveDaily();
-    if (gameMode === 'arcade') {
-      skip.freeze();
-      worker.postMessage({ numbers: numbers.map(x => x.value), target });
-    }
+    if (gameMode === 'arcade') skip.freeze();
   } }
 />
 
@@ -448,7 +478,7 @@
         </button>
       { /if }
     </div>
-  { :else if gameMode === 'infinite' }
+  { :else if gameMode === 'classic' }
     { #if numbers.length < 6 }
       <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
         <button class="text-btn" onclick={ () => pickNumber() }>

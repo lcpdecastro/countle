@@ -25,7 +25,7 @@
       <About />
       <span class="page-name">
         <span class="a">{ $page.url.pathname.split?.('/').at(-1).toUpperCase() }</span>
-        <span class="b">{ $page.url.pathname.includes('daily') ? dayjs().format('YYYY.MM.DD') : $page.url.pathname.includes('arcade') ? 'ARCADE' : 'INFINITE' }</span>
+        <span class="b">{ $page.url.pathname.includes('daily') ? dayjs().format('YYYY.MM.DD') : $page.url.pathname.includes('arcade') ? 'ARCADE' : 'CLASSIC' }</span>
       </span>
       <Instructions />
       <Menu />

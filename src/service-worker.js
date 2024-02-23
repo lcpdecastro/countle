@@ -6,10 +6,10 @@ const CACHE = `cache-${version}`;
 const ASSETS = [
   ...build,
   ...files,
+  '/classic/letters',
+  '/classic/numbers',
   '/daily/letters',
   '/daily/numbers',
-  '/infinite/letters',
-  '/infinite/numbers',
   '/arcade/letters',
   '/arcade/numbers',
   'https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&display=swap',
@@ -44,7 +44,7 @@ self.addEventListener('fetch', (event) => {
   async function respond() {
     const url = new URL(event.request.url);
 
-    if (url.pathname === '/') return Response.redirect('/infinite/letters', 302);
+    if (url.pathname === '/') return Response.redirect('/classic/letters', 302);
 
     const cache = await caches.open(CACHE);
 

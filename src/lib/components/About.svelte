@@ -1,6 +1,6 @@
 <script>
-  import Dialog from './Dialog.svelte';
-  import Logo from './Logo.svelte';
+  import Dialog from '$lib/components/Dialog.svelte';
+  import Logo from '$lib/components/Logo.svelte';
 
   let dialog = $state();
 </script>

@@ -16,8 +16,7 @@
     const m = ctx.measureText(value);
     const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
 
-    const n = span.getBoundingClientRect();
-    const containerWidth = n.width;
+    const containerWidth = span.offsetWidth;
 
     textScale = Math.min(1, containerWidth / textWidth);
   });
@@ -29,7 +28,7 @@
 <button disabled={ used } style:--size={ size } { onclick }>
   { #key value }
     <div class="square">
-      <div class="text" in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseIn } } bind:this={ span } style:--text-scale={ textScale }>
+      <div class="text" in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseOut } } bind:this={ span } style:--text-scale={ textScale }>
         { value }
       </div>
     </div>

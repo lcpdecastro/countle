@@ -19,14 +19,14 @@
   <div class="back" onclick={ () => menu.close() } />
 
   <nav class="main">
-    <h2>INFINITE</h2>
-    <a class:current={ $page.url.pathname === '/infinite/letters' } href="/infinite/letters">LETTERS</a>
-    <a class:current={ $page.url.pathname === '/infinite/numbers' } href="/infinite/numbers">NUMBERS</a>
-    <span class="line" />
+    <h2>CLASSIC</h2>
+    <a class:current={ $page.url.pathname === '/classic/letters' } href="/classic/letters">LETTERS</a>
+    <a class:current={ $page.url.pathname === '/classic/numbers' } href="/classic/numbers">NUMBERS</a>
+    <hr />
     <h2>DAILY</h2>
     <a class:current={ $page.url.pathname === '/daily/letters' } href="/daily/letters">LETTERS</a>
     <a class:current={ $page.url.pathname === '/daily/numbers' } href="/daily/numbers">NUMBERS</a>
-    <span class="line" />
+    <hr />
     <h2>ARCADE</h2>
     <a class:current={ $page.url.pathname === '/arcade/letters' } href="/arcade/letters">LETTERS</a>
     <a class:current={ $page.url.pathname === '/arcade/numbers' } href="/arcade/numbers">NUMBERS</a>
@@ -134,10 +134,11 @@
     font-weight: bold;
   }
 
-  .main .line {
-    height: 0.075rem;
-    margin: 0.5rem 0;
-    background: white;
+  hr {
+    width: 100%;
+    height: 0;
+    border: none;
+    border-top: 0.075rem solid white;
   }
 
   .icon-btn {

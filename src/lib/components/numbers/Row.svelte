@@ -4,9 +4,9 @@
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
   
-  import Square from '../Square.svelte';
-  import OutlineSquare from '../OutlineSquare.svelte';
-  import Operation from './Operation.svelte';
+  import Square from '$lib/components/Square.svelte';
+  import OutlineSquare from '$lib/components/OutlineSquare.svelte';
+  import Operation from '$lib/components/numbers/Operation.svelte';
 
   let { data, solved = false, onRemoveNumber, onRemoveOperation, onSelectNumber, onRemoveRow } = $props();
 </script>
@@ -42,7 +42,6 @@
     display: flex;
     gap: 0.5rem;
     backface-visibility: hidden;
-    overflow: hidden;
   }
 
   button {

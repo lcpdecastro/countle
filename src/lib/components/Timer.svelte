@@ -1,9 +1,10 @@
 <script>
+  import { onDestroy } from 'svelte';
   import { tweened } from 'svelte/motion';
   
   import { cssEaseIn } from '$lib/js/cssEase.js';
 
-  let { onTimerDone } = $props();
+  let { onTimerDone, onCritical } = $props();
 
   let store = tweened(30);
   let donePromise = $state();
@@ -25,11 +26,11 @@
     .then(() => donePromise = store.set(0, { duration: $store * 1000 }));
   }
 
-  $effect(() => reset);
-
   $effect(() => {
     donePromise?.then?.(onTimerDone);
   });
+
+  onDestroy(reset);
 </script>
 
 <div class="wrapper" class:red={ $store <= 5 } class:yellow={ $store > 30 }>

@@ -1,14 +1,14 @@
 <script>
-  import Square from '../Square.svelte';
+  import Square from '$lib/components/Square.svelte';
 
-  let { value, onSelectLetter } = $props();
+  let { letters, onSelectLetter } = $props();
 </script>
 
 <div class="wrapper">
   <div class="letters">
     { #each Array(9) as _, i }
-      <Square size="5rem" value={ value?.[i]?.value } used={ value?.[i]?.used }
-        onclick={ () => onSelectLetter(value[i]) }
+      <Square data={ letters[i] } size="5rem"
+        onclick={ () => onSelectLetter(letters[i]) }
       />
     { /each }
   </div>

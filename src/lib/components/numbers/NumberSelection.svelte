@@ -1,5 +1,5 @@
 <script>
-  import Square from '../Square.svelte';
+  import Square from '$lib/components/Square.svelte';
 
   let { numbers, onSelectNumber } = $props();
 </script>

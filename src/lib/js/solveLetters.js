@@ -30,7 +30,7 @@ function solve (letters) {
 
   out.words.sort();
 
-  return out;
+  return { letters, ...out };
 }
 
 export default solve;
