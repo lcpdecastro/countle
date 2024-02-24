@@ -244,30 +244,6 @@
 
   // determine if solved
   let solved = $derived(target && steps.at(-1)?.c?.value === target);
-  $effect(() => {
-    if (gameMode === 'arcade' && solved) {
-      for (let i = 0; i < numbers.length; i++) {
-        const n = numbers[i];
-        if (!n.used) continue;
-
-        if (n.value > 10) {
-          largeBin.push(n.value);
-          largeBin = shuffleList(largeBin);
-        } else {
-          smallBin.push(n.value);
-          smallBin = shuffleList(smallBin);
-        }
-
-        numbers[i] = new N(((Math.random() < 0.3 && largeBin.length > 0) ? largeBin : smallBin).pop());
-      }
-
-      removeRow(0);
-      score.add();
-      skip.refill();
-      pickArcadeTarget();
-      timer.add(5 + (arcadeDifficulty - 3) * 2.5);
-    }
-  });
 
   /* === ARCADE MODE === */
 
@@ -328,6 +304,32 @@
       skip.start();
     });
   }
+  
+  $effect(() => {
+    if (gameMode === 'arcade' && solved) {
+      for (let i = 0; i < 6; i++) {
+        const n = numbers[i];
+        if (!n.used) continue;
+
+        if (n.value > 10) {
+          largeBin.push(n.value);
+          largeBin = shuffleList(largeBin);
+        } else {
+          smallBin.push(n.value);
+          smallBin = shuffleList(smallBin);
+        }
+
+        numbers[i] = new N(((Math.random() < 0.3 && largeBin.length > 0) ? largeBin : smallBin).pop());
+      }
+
+      removeRow(0);
+      pickArcadeTarget();
+      
+      skip.refill();
+      score.add();
+      timer.add(5 + (arcadeDifficulty - 3) * 2.5);
+    }
+  });
 
   /* === DAILY MODE === */
 
@@ -543,7 +545,7 @@
   .top {
     display: grid;
     grid-template-rows: 100%;
-    grid-template-columns: 1fr min-content 1fr;
+    grid-template-columns: 1fr max-content 1fr;
     align-items: center;
     justify-items: center;
   }

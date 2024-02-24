@@ -9,9 +9,12 @@
 
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
+  import dictionary from '$lib/js/en_US.js';
   import dailyStore from '$lib/js/daily.js';
 
   import Timer from '$lib/components/Timer.svelte';
+  import Score from '$lib/components/arcade/Score.svelte';
+  import Reroll from '$lib/components/arcade/Reroll.svelte';
   import LetterSelection from '$lib/components/letters/LetterSelection.svelte';
   import InputArea from '$lib/components/letters/InputArea.svelte';
 
@@ -27,22 +30,44 @@
     }
   }
 
-  let vowels = $state(shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split('')));
-  let consonants = $state(shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split('')));
+  let vowels = $state();
+  let consonants = $state();
+  let digrams = $state();
+  let trigrams = $state();
 
   let timer = $state();
-  let running = $state(false);
-  let done = $state(false);
+  let running = $state();
+  let done = $state();
 
-  let letters = $state([]);
-  let input = $state([]);
+  let letters = $state();
+  let input = $state();
 
-  let solutions = $state([]);
-  let showSolutions = $state(false);
+  let solutions = $state();
+  let showSolutions = $state();
+
+  function resetStates () {
+    vowels = shuffleList(['E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'E', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'I', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'U', 'U', 'U', 'U', 'U', 'U']);
+    consonants = shuffleList(['S', 'S', 'S', 'S', 'S', 'S', 'R', 'R', 'R', 'R', 'R', 'R', 'N', 'N', 'N', 'N', 'N', 'T', 'T', 'T', 'T', 'T', 'L', 'L', 'L', 'L', 'C', 'C', 'C', 'C', 'D', 'D', 'D', 'G', 'G', 'G', 'P', 'P', 'P', 'M', 'M', 'M', 'H', 'H', 'B', 'B', 'Y', 'Y', 'F', 'F', 'V', 'K', 'W', 'Z', 'X', 'Q', 'J']);
+    digrams = shuffleList(['IN', 'IN', 'ER', 'ER', 'ES', 'ES', 'NG', 'NG', 'TI', 'TI', 'ED', 'ED', 'TE', 'TE', 'RE', 'RE', 'AT', 'AT', 'ON', 'ST', 'EN', 'LE', 'RA', 'RI', 'AN', 'AL', 'LI', 'AR', 'IS', 'NT', 'NE', 'OR', 'DE', 'CO', 'RS', 'IC', 'RO', 'IO', 'IE', 'IT', 'LA', 'SE', 'NS', 'SS', 'LY', 'CA', 'DI', 'UN', 'VE', 'TA', 'HE', 'OU', 'LL', 'TR', 'PE', 'ME', 'EL', 'EA', 'CH']);
+    trigrams = shuffleList(['ING', 'ING', 'ERS', 'ION', 'ATI', 'TIO', 'TER', 'ATE', 'ESS', 'ENT', 'TIN', 'EST', 'NES', 'IES', 'TED', 'IST', 'ONS', 'CON', 'RES', 'INE', 'ALL', 'LIN', 'VER', 'OUS', 'PER', 'BLE', 'RAT', 'LES', 'ICA', 'MEN', 'RIN']);
+    
+    running = false;
+    done = false;
+    
+    letters = [];
+    input = [];
+    
+    solutions = undefined;
+    showSolutions = false;
+  }
+
+  resetStates();
 
   let worker = $state();
 
   async function solve () {
+    solutions = undefined;
+
     const currLetters = unstate(letters).map(x => x.value);
 
     worker.postMessage({ letters: currLetters });
@@ -99,27 +124,87 @@
   }
 
   function resetGame () {
-    vowels = shuffleList('AAAAAAAAAAAAAAAEEEEEEEEEEEEEEEEEEEEEIIIIIIIIIIIIIOOOOOOOOOOOOOUUUUU'.split(''));
-    consonants = shuffleList('BBCCCDDDDDDFFGGGHHJKLLLLLMMMMNNNNNNNNPPPPQRRRRRRRRRSSSSSSSSSTTTTTTTTTVWXYZ'.split(''));
-
-    letters = [];
-    input = [];
-
-    solutions = undefined;
-    showSolutions = false;
-
-    done = false;
+    resetStates();
     timer.reset();
+
+    if (gameMode === 'arcade') {
+      arcadeDifficulty = undefined;
+      score.reset();
+    }
   }
+
+  let inputWord = $derived(input.map(x => x.value).join(''));
+  let invalid = $derived(inputWord.length > 0 && !dictionary.has(inputWord.toLowerCase()));
 
   /* === ARCADE MODE === */
 
   let arcadeDifficulty = $state();
   let score = $state();
+  let skip = $state();
 
   function startArcade (diff) {
-    // TODO!
-    return;
+    arcadeDifficulty = diff;
+    while (letters.length < 9) letters.push(new L(pickArcadeLetter()));
+    letters = shuffleList(letters);
+
+    solve();
+    startGame();
+    skip.start();
+  }
+
+  function pickArcadeLetter () {
+    const { v, c, d, t } = letters.reduce((p, x) => {
+      if (x) {
+        if (x.value.length === 1 && 'AEIOU'.includes(x.value)) p.v++;
+        else if (x.value.length === 1) p.c++;
+        else if (x.value.length === 2) p.d++;
+        else if (x.value.length === 3) p.t++;
+      }
+
+      return p;
+    }, { v: 0, c: 0, d: 0, t: 0 });
+    
+    if (arcadeDifficulty > 2 && t < 1 && c >= 3 && v >= 2) return trigrams.pop();
+    if (arcadeDifficulty > 1 && d < 2 && c >= 3 && v >= 2) return digrams.pop();
+    if (c === 6 || (Math.random() < 0.4 && v < 5)) return vowels.pop();
+    return consonants.pop();
+  }
+
+  function enterWord () {
+    for (let i = 0; i < 9; i++) {
+      const letter = letters[i];
+      if (!letter.used) continue;
+
+      const value = letter.value;
+      
+      if (value.length === 1 && 'AEIOU'.includes(value)) vowels = shuffleList(vowels.concat(value));
+      else if (value.length === 1) consonants = shuffleList(consonants.concat(value));
+      else if (value.length === 2) digrams = shuffleList(digrams.concat(value));
+      else if (value.length === 3) trigrams = shuffleList(trigrams.concat(value));
+
+      letters[i] = undefined;
+    }
+
+    for (let i = 0; i < 9; i++) {
+      if (!letters[i]) letters[i] = new L(pickArcadeLetter());
+    }
+
+    score.add();
+    timer.add(letters.every(x => x.used) ? 30 : inputWord.length);
+    skip.refill();
+    
+    clearWord();
+    solve();
+  }
+
+  function rerollLetters () {
+    input.length = 0;
+    letters.length = 0;
+    while (letters.length < 9) letters.push(new L(pickArcadeLetter()));
+    letters = shuffleList(letters);
+    
+    solve();
+    skip.refill();
   }
 
   /* === DAILY MODE === */
@@ -166,16 +251,6 @@
 </script>
 
 <svelte:window
-  onkeydown={ e => {
-    if (!running) return;
-    
-    if (e.key === 'Backspace') removeLetter();
-    else if (e.key === 'Delete') clearWord();
-    else {
-      const x = letters.find(y => !y.used && y.value === e.key.toUpperCase());
-      if (x) selectLetter(x);
-    }
-  } }
   onbeforeunload={ () => {
     if (gameMode === 'daily' && running) saveDaily();
   } }
@@ -195,7 +270,23 @@
     onSelectLetter={ x => selectLetter(x) }
   />
 
-  <InputArea { input } active={ running }
+  { #if gameMode === 'arcade' }
+    <div class="arcade-buttons" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+      <div style:justify-self="end">
+        <Reroll onclick={ rerollLetters } bind:this={ skip } />
+      </div>
+
+      <div>
+        <Score bind:this={ score } />
+      </div>
+
+      <button class="text-btn submit" disabled={ inputWord.length === 0 || invalid } onclick={ enterWord }>
+        SUBMIT
+      </button>
+    </div>
+  { /if }
+    
+  <InputArea { input } active={ running } { invalid }
     onRemoveLetter={ removeLetter }
     onClearWord={ clearWord }
   />
@@ -236,13 +327,13 @@
   { :else if gameMode === 'arcade' }
     { #if !running }
       <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-        <button class="text-btn" onclick={ () => startArcade(3) }>
+        <button class="text-btn" onclick={ () => startArcade(1) }>
           EASY
         </button>
-        <button class="text-btn" onclick={ () => startArcade(4) }>
+        <button class="text-btn" onclick={ () => startArcade(2) }>
           MEDIUM
         </button>
-        <button class="text-btn" onclick={ () => startArcade(5) }>
+        <button class="text-btn" onclick={ () => startArcade(3) }>
           HARD
         </button>
       </div>
@@ -267,6 +358,19 @@
     display: flex;
     gap: 1rem;
     flex-direction: column;
+  }
+
+  .arcade-buttons {
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 1fr max-content 1fr;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .submit {
+    width: min-content;
+    justify-self: start;
   }
 
   .buttons {
