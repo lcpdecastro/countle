@@ -8,11 +8,11 @@
   let countdown = tweened(0);
 
   export function start () {
-    countdown.set(1, { duration: 5000 });
+    countdown.set(5, { duration: 5000 });
   }
 
   export function refill () {
-    countdown.set(0, { duration: 0 })
+    countdown.set(0.15, { duration: 150, easing: cssEaseIn })
     .then(start);
   }
 
@@ -31,10 +31,10 @@
 <div class="wrapper">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" class:frozen>
     <circle cx="50" cy="50" r="50" fill="var(--colar-gray-3)" />
-    <circle cx="50" cy="50" r="25" stroke="var(--theme-color)" stroke-width="50" stroke-dasharray="{ Math.PI * 50 * $countdown } { Math.PI * 50 * (1 - $countdown) }"/>
+    <circle cx="50" cy="50" r="25" stroke="var(--theme-color)" stroke-width="50" stroke-dasharray="{ Math.PI * 50 * ($countdown / 5) } { Math.PI * 50 * (1 - ($countdown / 5)) }"/>
   </svg>
 
-  <button class="text-btn" disabled={ $countdown < 1 || frozen } onclick={ () => { refill(); onclick(); } }>
+  <button class="text-btn" disabled={ $countdown < 5 || frozen } onclick={ () => { refill(); onclick(); } }>
     <span>REROLL</span>
   </button>
 </div>

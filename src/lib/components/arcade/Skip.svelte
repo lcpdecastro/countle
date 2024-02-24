@@ -5,19 +5,19 @@
 
   let { onclick } = $props();
 
-  let countdown = tweened(-100);
+  let countdown = tweened(0);
 
   export function start () {
-    countdown.set(0, { duration: 5000 });
+    countdown.set(5, { duration: 5000 });
   }
 
   export function refill () {
-    countdown.set(-100, { duration: 0 })
+    countdown.set(0.15, { duration: 150, easing: cssEaseIn })
     .then(start);
   }
 
   export function reset () {
-    countdown.set(-100, { duration: 150, easing: cssEaseIn });
+    countdown.set(0, { duration: 150, easing: cssEaseIn });
     frozen = false;
   }
 
@@ -29,11 +29,11 @@
 </script>
 
 <div class="wrapper">
-  <button class="text-btn" disabled={ $countdown < 0 || frozen } onclick={ () => { refill(); onclick(); } }>
+  <button class="text-btn" disabled={ $countdown < 5 || frozen } onclick={ () => { refill(); onclick(); } }>
     <span>SKIP</span>
   </button>
   <div class="countdown" class:frozen>
-    <div class="inner" style:transform="translateX({ $countdown }%)" />
+    <div class="inner" style:transform="translateX({ (1 - ($countdown / 5)) * -100 }%)" />
   </div>
 </div>
 

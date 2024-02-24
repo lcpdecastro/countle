@@ -130,6 +130,7 @@
     if (gameMode === 'arcade') {
       arcadeDifficulty = undefined;
       score.reset();
+      skip.reset();
     }
   }
 
@@ -262,6 +263,7 @@
     done = true;
 
     if (gameMode === 'daily') saveDaily();
+    if (gameMode === 'arcade') skip.freeze();
   } }
 />
 
@@ -276,7 +278,7 @@
         <Reroll onclick={ rerollLetters } bind:this={ skip } />
       </div>
 
-      <div>
+      <div style:width="4rem">
         <Score bind:this={ score } />
       </div>
 

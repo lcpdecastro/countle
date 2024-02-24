@@ -149,7 +149,7 @@
         </p>
       { :else if gameMode === 'arcade' }
         <p>
-          Welcome to <b>Countle: Daily Letters</b>, where your goal is to complete as many Letters rounds as possible before time runs out.
+          Welcome to <b>Countle: Arcade Letters</b>, where your goal is to complete as many Letters rounds as possible before time runs out.
           When you successfully solve a round, a new one comes out immediately, so solve them as fast as you can!
         </p>
       { /if }
@@ -167,7 +167,7 @@
         </p>
       { :else if gameMode === 'arcade' }
         <p>
-          Unlike a regular Numbers game, the numbers are randomly chosen across the vowel and consonant bins.
+          Unlike a regular Letters game, the letters are randomly chosen across the vowel and consonant bins.
           <b>Easy</b> games will take letters from these bins, just like in regular Letters games.
         </p>
         <p>
@@ -179,7 +179,7 @@
       { #if gameMode === 'arcade' }
         <p>
           Once the game starts, the timer will start counting down from <b>30 seconds</b>.
-          For every word submitted, the timer will be increased by as many seconds as there are letters in your word.
+          For every word submitted, the timer will be increased by <b>1 second</b> for every letter in your word.
         </p>
         <p>
           Letters used in your solution will be returned to their respective bins and replaced with newly picked letters.
@@ -194,7 +194,8 @@
         </p>
       { /if }
       <p>
-        For uniformity, the game checks against the SCOWL and Friends American English word list; as such, spellings such as &OpenCurlyDoubleQuote;colour&CloseCurlyDoubleQuote; or &OpenCurlyDoubleQuote;metre&CloseCurlyDoubleQuote; are not accepted.
+        For uniformity, the game checks against the SCOWL and Friends American English word list.
+        As such, spellings such as &OpenCurlyDoubleQuote;colour&CloseCurlyDoubleQuote; or &OpenCurlyDoubleQuote;metre&CloseCurlyDoubleQuote; are not accepted.
       </p>
       { #if gameMode === 'daily' }
         { @render dailyNote() }
