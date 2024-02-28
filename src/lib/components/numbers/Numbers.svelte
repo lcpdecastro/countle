@@ -149,7 +149,7 @@
 
   function startGame () {
     running = true;
-    // timer.start();
+    timer.start();
   }
 
   function resetGame () {
