@@ -1,27 +1,28 @@
 <script>
-  import { untrack } from 'svelte';
-
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-  let { value, used = false, valid = true, size = "3rem", solved = false, onclick } = $props();
+  let { data, size = "3rem", solved, onclick } = $props();
+
+  let value = $derived(data?.value);
+  let used = $derived(data?.used);
+  let invalid = $derived(data?.valid === false);
 
   let canvas = $state();
   let span = $state();
 
   let textScale = $state(1);
 
-  let invalid = $derived(valid === false);
-
   $effect(() => {
+    if (!value) return;
+
     const ctx = canvas.getContext('2d');
 
-    ctx.font = `bold calc(${size} * 0.5 * ${untrack(() => used) ? 0.9 : 1}) "Work Sans"`;
+    ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
     const m = ctx.measureText(value);
     const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
 
-    const n = span.getBoundingClientRect();
-    let containerWidth = n.width;
+    let containerWidth = parseFloat(getComputedStyle(span).width);
 
     textScale = Math.min(1, containerWidth / textWidth);
   });
@@ -30,7 +31,7 @@
 <canvas bind:this={ canvas } />
 
 <button disabled={ used === true } inert={ invalid } style:--size={ size } { onclick }>
-  { #key value }
+  { #key data }
     <div in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } } class="square" class:invalid class:solved>
       <div class="text" bind:this={ span } style:--text-scale={ textScale }>
         { value }
@@ -54,6 +55,7 @@
     border-radius: 30%;
     transition-property: transform, filter, opacity, background;
     transition-duration: 0.15s;
+    overflow: hidden;
   }
 
   button:not(:disabled):hover {
@@ -64,6 +66,11 @@
     filter: grayscale(1);
     transform: scale(0.9);
     opacity: 0.5;
+  }
+
+  button.computing {
+    transition-duration: 0s;
+    transform: none;
   }
 
   .square {

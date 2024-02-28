@@ -3,25 +3,25 @@
   import seed from 'seed-random';
   import dayjs from 'dayjs';
 
-  import { getContext, tick } from 'svelte';
+  import { tick, onMount, onDestroy, unstate } from 'svelte';
   import { fade } from 'svelte/transition';
   import { page } from '$app/stores';
 
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
+  import dailyStore from '$lib/js/daily.js';
 
-  import Target from './Target.svelte';
-  import NumberSelection from './NumberSelection.svelte';
-  import Steps from './Steps.svelte';
-  import OperationPanel from './OperationPanel.svelte';
+  import Timer from '$lib/components/Timer.svelte';
+  import Score from '$lib/components/arcade/Score.svelte';
+  import Target from '$lib/components/numbers/Target.svelte';
+  import Skip from '$lib/components/arcade/Skip.svelte';
+  import NumberSelection from '$lib/components/numbers/NumberSelection.svelte';
+  import Steps from '$lib/components/numbers/Steps.svelte';
+  import OperationPanel from '$lib/components/numbers/OperationPanel.svelte';
 
-  let { onStartGame, onResetGame, onStoreSolutions } = $props();
+  let gameMode = $page.url.pathname.split('/')[1];
 
-  const running = getContext('running');
-  const done = getContext('done');
-
-  let daily = $page.url.pathname.includes('daily');
-  if (daily) seed(dayjs().format('YYYY-MM-DD'), { global: true });
+  if (gameMode === 'daily') seed(dayjs().format('YYYY-MM-DD'), { global: true });
 
   class N {
     used = $state(false);
@@ -32,33 +32,73 @@
     }
   }
 
-  let smallBin = $state(shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]));
-  let largeBin = $state(shuffleList([25, 50, 75, 100]));
+  let smallBin = $state();
+  let largeBin = $state();
 
-  let numbers = $state([]);
+  let timer = $state();
+  let running = $state();
+  let done = $state();
+
+  let numbers = $state();
   let target = $state();
-  let steps = $state([]);
+  let steps = $state();
 
   let solutions = $state();
   let sampleSolution = $state();
 
-  let worker = $state();
-  $effect(() => {
-    if (!worker) {
-      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
-      worker.addEventListener('message', e => solutions = e.data);
-    }
-  });
+  function resetStates () {
+    smallBin = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
+    largeBin = shuffleList([25, 50, 75, 100]);
+
+    running = false;
+    done = false;
+
+    numbers = [];
+    target = undefined;
+    steps = [];
+
+    solutions = undefined;
+    sampleSolution = undefined;
+  }
+
+  resetStates();
+
+  let solver = $state();
+
+  async function solve () {
+    const currNumbers = unstate(numbers).map(x => x.value);
+    const currTarget = unstate(target);
+
+    solver.postMessage({ numbers: currNumbers, target: currTarget });
+
+    solutions = await new Promise(resolve => {
+      function handler (e) {
+        if (currTarget !== target || currNumbers.some((_, i, a) => a[i] !== numbers[i].value)) {
+          solver.removeEventListener('message', handler);
+          return;
+        }
+
+        const data = e.data;
+        if (data.target === currTarget && data.numbers.every((_, i, a) => a[i] === currNumbers[i])) {
+          resolve({
+            solutions: data.solutions,
+            diff: data.diff
+          });
+          
+          solver.removeEventListener('message', handler);
+        }
+      }
+
+      solver.addEventListener('message', handler);
+    });
+  }
 
   function pickNumber (large = false) {
-    if (large) numbers.push(new N(largeBin.pop()));
-    else numbers.push(new N(smallBin.pop()));
+    return (large ? largeBin : smallBin).pop();
   }
   
   function pickTarget () {
-    target = Math.floor(Math.random() * 899) + 101;
-    onStartGame();
-    worker.postMessage({ numbers: numbers.map(x => x.value), target });
+    return Math.floor(Math.random() * 899) + 101;
   }
 
   function selectNumber (x) {
@@ -121,122 +161,194 @@
     steps.splice(row, steps.length - row);
   }
 
+  function startGame () {
+    running = true;
+    timer.start();
+  }
+
   function resetGame () {
-    smallBin = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
-    largeBin = shuffleList([25, 50, 75, 100]);
+    resetStates();
+    timer.reset();
 
-    numbers = [];
-    target = undefined;
-    steps = [];
-
-    solutions = undefined;
-    sampleSolution = undefined;
-
-    onResetGame();
+    if (gameMode === 'arcade') {
+      arcadeDifficulty = undefined;
+      score.reset();
+      skip.reset();
+    }
   }
 
   function showSolution () {
     sampleSolution = solutions.solutions[Math.floor(Math.random() * solutions.solutions.length)];
   }
 
-  // compute row results
-  $effect(() => {
-    if (steps.length > 0) {
-      if (steps.at(-1).a && steps.at(-1).o && steps.at(-1).b) {
-        steps.at(-1).c = new N(
-          steps.at(-1).o === '\u002b' ? steps.at(-1).a.value + steps.at(-1).b.value :
-          steps.at(-1).o === '\u2212' ? steps.at(-1).a.value - steps.at(-1).b.value :
-          steps.at(-1).o === '\u00d7' ? steps.at(-1).a.value * steps.at(-1).b.value :
-          steps.at(-1).o === '\u00f7' ? steps.at(-1).a.value / steps.at(-1).b.value :
-          undefined
-        );
-      } else steps.at(-1).c = null;
-    }
+  function combine (a, b, o) {
+    const av = a.value;
+    const bv = b.value;
+
+    if (o === '\u002b') return new N(av + bv);
+    if (o === '\u2212' && av > bv && av !== bv * 2) return new N(av - bv);
+    if (o === '\u00d7' && av !== 1 && bv !== 1) return new N(av * bv);
+    if (o === '\u00f7' && bv !== 1 && av % bv === 0 && av !== bv ** 2) return new N(av / bv);
+
+    return null;
+  }
+
+  let validOps = $state({
+    '\u002b': false,
+    '\u2212': false,
+    '\u00d7': false,
+    '\u00f7': false
   });
-  
-  // mark invalid numbers
+
+  // compute step results + mark operations / numbers as valid
   $effect(() => {
-    for (let x of numbers.concat(steps.filter(y => y.c).map(y => y.c))) {
-      if (x.used) continue;
+    if (solved) {
+      for (let o in validOps) validOps[o] = false;
+      for (let n of numbers) n.valid = true;
+    }
+    else if (running) {
+      const lastStep = steps.at(-1);
+      if (!lastStep) {
+        for (let o in validOps) validOps[o] = false;
+        return;
+      }
 
-      x.valid = true;
+      const allNumbers = numbers.concat(steps.filter(x => x.c).map(x => x.c)).filter(x => !x.used);
 
-      if (steps.at(-1) && !steps.at(-1).c) {
-        const { a, b, o } = steps.at(-1);
+      if (!lastStep.a || !lastStep.b) {
+        if (lastStep.c) lastStep.c = null;
 
-        if (o === '\u2212') {
-          if (a && (x.value >= a.value || a.value === x.value * 2)) x.valid = false;
-          else if (b && (x.value <= b.value || x.value === b.value * 2)) x.valid = false;
+        if (!lastStep.o) {
+          for (let o in validOps) validOps[o] = allNumbers.some(n => combine(lastStep.a ?? n, lastStep.b ?? n, o) !== null);
+          for (let n of allNumbers) n.valid = true;
         }
-        else if (o === '\u00d7') {
-          if (x.value === 1) x.valid = false;
-        }
-        else if (o === '\u00f7') {
-          if (x.value === 1) x.valid = false;
-          else if (a && (a.value % x.value !== 0 || a.value === x.value ** 2)) x.valid = false;
-          else if (b && (x.value % b.value !== 0 || x.value === b.value ** 2)) x.valid = false;
+        else {
+          for (let o in validOps) validOps[o] = false;
+          for (let n of allNumbers) n.valid = combine(lastStep.a ?? n, lastStep.b ?? n, lastStep.o) !== null;
         }
       }
-    }
-  });
-
-  let invalidOps = $state({
-    '\u002b': true,
-    '\u2212': true,
-    '\u00d7': true,
-    '\u00f7': true
-  });
-
-  // mark invalid operations
-  $effect(() => {
-    if (target === undefined || steps.length === 0 || solved || $done || ((steps.at(-1).a !== null) !== (steps.at(-1).b !== null) && steps.at(-1).o) || (steps.length === 5 && steps.at(-1).c)) {
-      invalidOps['\u002b'] = true;
-      invalidOps['\u2212'] = true;
-      invalidOps['\u00d7'] = true;
-      invalidOps['\u00f7'] = true;
-    } else {
-      invalidOps['\u002b'] = false;
-      invalidOps['\u2212'] = false;
-      invalidOps['\u00d7'] = false;
-      invalidOps['\u00f7'] = false;
-
-      if (steps.at(-1)?.a && steps.at(-1)?.b && !steps.at(-1)?.c) {
-        const a = steps.at(-1).a.value;
-        const b = steps.at(-1).b.value;
-
-        invalidOps['\u2212'] = a <= b || a === b * 2;
-        invalidOps['\u00d7'] = a === 1 || b === 1;
-        invalidOps['\u00f7'] = b === 1 || a % b !== 0 || a === b * b;
-      }
-      else if (steps.at(-1)?.c) {
-        const c = steps.at(-1).c.value;
-        const x = numbers.filter(y => !y.used).concat(steps.filter(y => y !== steps.at(-1) && y.c && !y.c.used).map(y => y.c)).map(y => y.value);
-
-        invalidOps['\u2212'] = x.every(y => c <= y || c === y * 2);
-        invalidOps['\u00d7'] = x.every(y => c === 1 || y === 1);
-        invalidOps['\u00f7'] = x.every(y => y === 1 || c % y !== 0 || c === y ** 2);
+      else {
+        if (!lastStep.o) {
+          lastStep.c = null;
+          for (let o in validOps) validOps[o] = combine(lastStep.a, lastStep.b, o) !== null;
+        }
+        else {
+          if (!lastStep.c) lastStep.c = combine(lastStep.a, lastStep.b, lastStep.o);
+          for (let o in validOps) validOps[o] = allNumbers.some(n => lastStep.c !== n && combine(lastStep.c, n, o) !== null);
+          for (let n of allNumbers) n.valid = ['\u002b', '\u2212', '\u00d7', '\u00f7'].some(o => combine(lastStep.c, n, o) !== null);
+        }
       }
     }
   });
 
   // determine if solved
-  let solved = $derived(steps.at(-1)?.c?.value === target);
+  let solved = $derived(target && steps.at(-1)?.c?.value === target);
 
-  async function getDaily () {
-    const l = Math.floor(Math.random() * 5);
-    const s = shuffleList(Array(l).fill(true).concat(Array(6 - l).fill(false)));
-    for (let x of s) pickNumber(x);
+  /* === ARCADE MODE === */
 
-    await tick();
-    
-    pickTarget();
+  let arcadeDifficulty = $state();
+  let score = $state();
+  let skip = $state();
+
+  function pickArcadeTarget () {
+    const min = { 3: 50, 4: 100, 5: 100 };
+    const max = { 3: 500, 4: 1000, 5: 1000 };
+
+    function helper (num) {
+      if (num.length === 1) return num[0];
+
+      const shuffled = shuffleList(num);
+      const [a, b] = shuffled.slice(0, 2);
+      let newNum;
+
+      for (let o of shuffleList('+-*/'.split(''))) {
+        if (o === '+') newNum = a + b;
+        else if (o === '-') {
+          if (a > b && a !== b * 2) newNum = a - b;
+        }
+        else if (o === '*') {
+          if (a !== 1 && b !== 1) newNum = a * b;
+        }
+        else if (o === '/') {
+          if (b !== 1 && a % b === 0 && a !== b ** 2) newNum = a / b;
+        }
+        
+        if (newNum) break;
+      }
+
+      return helper(shuffled.slice(2).concat(newNum));
+    }
+
+    let i = 0;
+    while (true) {
+      const t = helper(shuffleList(numbers.map(x => x.value)).slice(0, arcadeDifficulty));
+      const x = t !== target && numbers.every(n => n.value !== t);
+      if (i === 9 || (t > min[arcadeDifficulty] && t < max[arcadeDifficulty] && x)) {
+        target = t;
+        solutions = undefined;
+        solve();
+        break;
+      }
+      if (x) i++;
+    }
   }
 
-  export function getGameState () {
+  function startArcade (diff) {
+    arcadeDifficulty = diff;
+    while (numbers.length < 6) numbers.push(new N(pickNumber(Math.random() < 0.3 && largeBin.length > 0)));
+
+    tick().then(() => {
+      pickArcadeTarget();
+      startGame();
+      skip.start();
+    });
+  }
+  
+  $effect(() => {
+    if (gameMode === 'arcade' && solved) {
+      for (let i = 0; i < 6; i++) {
+        const n = numbers[i];
+        if (!n.used) continue;
+
+        if (n.value > 10) {
+          largeBin.push(n.value);
+          largeBin = shuffleList(largeBin);
+        } else {
+          smallBin.push(n.value);
+          smallBin = shuffleList(smallBin);
+        }
+
+        numbers[i] = new N(((Math.random() < 0.3 && largeBin.length > 0) ? largeBin : smallBin).pop());
+      }
+
+      removeRow(0);
+      pickArcadeTarget();
+      
+      skip.refill();
+      score.add();
+      timer.add(5 + (arcadeDifficulty - 3) * 2.5);
+    }
+  });
+
+  /* === DAILY MODE === */
+
+  function getDaily () {
+    const l = Math.floor(Math.random() * 5);
+    const s = shuffleList(Array(l).fill(true).concat(Array(6 - l).fill(false)));
+    for (let x of s) numbers.push(new N(pickNumber(x)));
+
+    tick().then(() => {
+      target = pickTarget();
+      solve();
+      startGame();
+    });
+  }
+
+  function saveDaily () {
     const squares = numbers.concat(steps.filter(x => x.c).map(x => x.c));
     const stepsAdj = steps.map(s => [squares.indexOf(s.a), s.o, squares.indexOf(s.b)]);
 
-    return {
+    $dailyStore['numbers'] = {
       numbers: numbers.map(x => x.value),
       target,
       steps: stepsAdj,
@@ -244,7 +356,9 @@
     };
   }
 
-  export function applyGameState (gameState) {
+  function applyDaily () {
+    const gameState = $dailyStore['numbers'];
+
     for (let x of gameState.numbers) numbers.push(new N(x));
     target = gameState.target;
 
@@ -277,17 +391,63 @@
     }
 
     if (gameState.solutions) solutions = gameState.solutions;
-    else {
-      worker.postMessage({ numbers: numbers.map(x => x.value), target });
-      worker.addEventListener('message', e => onStoreSolutions(e.data));
-    }
+    else solve();
   }
 
-  $effect(() => seed.resetGlobal);
+  /* === LIFECYCLE === */
+
+  onMount(() => {
+    if (gameMode !== 'daily' || (gameMode === 'daily' && !$dailyStore?.['numbers']?.['solutions'])) {
+      solver = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+    }
+
+    if (gameMode === 'daily' && $dailyStore['date'] === dayjs().format('YYYY-MM-DD') && 'numbers' in $dailyStore) {
+      applyDaily();
+      done = true;
+      timer.drain();
+    }
+  });
+
+  onDestroy(() => {
+    if (gameMode === 'daily') seed.resetGlobal();
+    solver?.terminate?.();
+  });
 </script>
 
-<div class="game" inert={ !$running || solved }>
-  <Target value={ target } />
+<svelte:window
+  onbeforeunload={ () => {
+    if (gameMode === 'daily' && running) saveDaily();
+  } }
+/>
+
+<Timer bind:this={ timer }
+  onTimerDone={ () => {
+    running = false;
+    done = true;
+    for (let o in validOps) validOps[o] = false;
+
+    if (gameMode === 'daily') saveDaily();
+    if (gameMode === 'arcade') skip.freeze();
+  } }
+/>
+
+<div class="game" inert={ !running || solved }>
+  <div class="top">
+    { #if gameMode === 'arcade' }
+      <Score bind:this={ score } />
+    { /if }
+
+    <Target value={ target } />
+
+    { #if gameMode === 'arcade' }
+      <Skip bind:this={ skip }
+        onclick={ () => {
+          pickArcadeTarget();
+          removeRow(0);
+        } }
+      />
+    { /if }
+  </div>
 
   <div class="board">
     <div class="left">
@@ -297,14 +457,14 @@
     </div>
 
     <div class="right">
-      <Steps bind:steps={ steps } { solved }
+      <Steps { steps } { solved }
         onSelectNumber={ selectNumber }
         onRemoveNumber={ removeNumber }
         onRemoveOperation={ removeOperation }
         onRemoveRow={ removeRow }
       />
 
-      <OperationPanel { invalidOps }
+      <OperationPanel { validOps }
         onSelectOperation={ selectOperation }
       />
     </div>
@@ -312,26 +472,63 @@
 </div>
 
 <div class="buttons">
-  { #if $done }
+  { #if done }
     <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ showSolution } disabled={ !solutions }>{ solutions ? 'SHOW A SOLUTION' : 'SOLVING\u0133' }</button>
-      { #if !daily }
-        <button class="text-btn" on:click={ resetGame }>RESET</button>
+      <button class="text-btn" disabled={ !solutions } onclick={ showSolution }>
+        { solutions ? 'SHOW A SOLUTION' : 'SOLVING\u2026' }
+      </button>
+
+      { #if gameMode !== 'daily' }
+        <button class="text-btn" onclick={ resetGame }>
+          { gameMode === 'arcade' ? 'PLAY AGAIN' : 'RESET' }
+        </button>
       { /if }
     </div>
-  { :else if daily && target === undefined }
-    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ getDaily }>SHOW TODAY&CloseCurlyQuote;S NUMBERS</button>
-    </div>
-  { :else if numbers.length < 6 }
-    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ () => pickNumber() }>SMALL</button>
-      <button class="text-btn" on:click={ () => pickNumber(true) } disabled={ largeBin.length === 0 }>LARGE</button>
-    </div>
-  { :else if target === undefined }
-    <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-      <button class="text-btn" on:click={ pickTarget }>GENERATE TARGET</button>
-    </div>
+  { :else if gameMode === 'classic' }
+    { #if numbers.length < 6 }
+      <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+        <button class="text-btn" onclick={ () => numbers.push(new N(pickNumber())) }>
+          SMALL
+        </button>
+        <button class="text-btn" disabled={ largeBin.length === 0 } onclick={ () => numbers.push(new N(pickNumber(true))) }>
+          LARGE
+        </button>
+      </div>
+    { :else if target === undefined }
+      <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+        <button class="text-btn"
+          onclick={ () => {
+            target = pickTarget();
+            solve();
+            startGame();
+          } }
+        >
+          GENERATE TARGET
+        </button>
+      </div>
+    { /if }
+  { :else if gameMode === 'daily' }
+    { #if !target }
+      <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+        <button class="text-btn" onclick={ getDaily }>
+          SHOW TODAY&CloseCurlyQuote;S NUMBERS
+        </button>
+      </div>
+    { /if }
+  { :else if gameMode === 'arcade' }
+    { #if !running }
+      <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
+        <button class="text-btn" onclick={ () => startArcade(3) }>
+          EASY
+        </button>
+        <button class="text-btn" onclick={ () => startArcade(4) }>
+          MEDIUM
+        </button>
+        <button class="text-btn" onclick={ () => startArcade(5) }>
+          HARD
+        </button>
+      </div>
+    { /if }
   { /if }
 </div>
 
@@ -353,6 +550,14 @@
 
   .game {
     flex-direction: column;
+  }
+
+  .top {
+    display: grid;
+    grid-template-rows: 100%;
+    grid-template-columns: 1fr max-content 1fr;
+    align-items: center;
+    justify-items: center;
   }
 
   .right {

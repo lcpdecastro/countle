@@ -1,31 +1,39 @@
 <script>
+  import { onDestroy } from 'svelte';
   import { tweened } from 'svelte/motion';
   
   import { cssEaseIn } from '$lib/js/cssEase.js';
 
-  let { duration } = $props();
+  let { onTimerDone } = $props();
 
-  let store = tweened(duration, { duration: duration * 1000 });
+  let store = tweened(30);
+  let donePromise = $state();
 
-  export async function start () {
-    const x = store.set(0);
-    return x;
+  export function start () {
+    donePromise = store.set(0, { duration: 30000 });
   }
 
-  export async function reset () {
-    return store.set(duration, { duration: 150, easing: cssEaseIn });
+  export function reset () {
+    store.set(30, { duration: 150, easing: cssEaseIn });
   }
   
-  export async function drain () {
-    return store.set(0, { duration: 0 });
+  export function drain () {
+    store.set(0, { duration: 0 });
   }
 
-  $effect(() => reset);
+  export function add (amount) {
+    store.set($store + amount - 0.15, { duration: 150, easing: cssEaseIn })
+    .then(() => donePromise = store.set(0, { duration: $store * 1000 }));
+  }
+
+  $effect(() => donePromise?.then?.(onTimerDone));
+
+  onDestroy(reset);
 </script>
 
-<div class="wrapper" class:red={ $store <= 5 }>
+<div class="wrapper" class:red={ $store <= 5 } class:yellow={ $store > 30 }>
   <div class="timer">
-    <div class="inner" style:transform="translateX({ (1 - $store / duration) * -100 }%)"/>
+    <div class="inner" style:transform="translateX({ Math.min((1 - $store / 30) * -100, 0) }%)"/>
   </div>
 
   <span>{ Math.ceil($store).toString().padStart(2, '0') }</span>
@@ -59,6 +67,10 @@
     background: var(--colar-red-6);
   }
 
+  .wrapper.yellow .inner {
+    background: var(--colar-yellow-6);
+  }
+
   span {
     font-size: 1.5rem;
     font-weight: bold;
@@ -69,5 +81,9 @@
 
   .wrapper.red span {
     color: var(--colar-red-6);
+  }
+
+  .wrapper.yellow span {
+    color: var(--colar-yellow-6);
   }
 </style>

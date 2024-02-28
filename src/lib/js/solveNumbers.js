@@ -150,5 +150,5 @@ export default function solve (numbers, target) {
     }
   }
 
-  return { solutions, diff };
+  return { numbers, target, solutions, diff };
 }

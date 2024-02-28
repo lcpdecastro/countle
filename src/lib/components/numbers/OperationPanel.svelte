@@ -1,10 +1,10 @@
 <script>
-  let { size = "3rem", invalidOps, onSelectOperation } = $props();
+  let { size = "3rem", validOps, onSelectOperation } = $props();
 </script>
 
 <div class="wrapper">
   { #each "\u002b\u2212\u00d7\u00f7" as o }
-    <button style:--size={ size } disabled={ invalidOps[o] }
+    <button style:--size={ size } disabled={ !validOps[o] }
       onclick={ () => onSelectOperation(o) }  
     >
       <div class="square">

@@ -1,6 +1,6 @@
 <script>
-  import Dialog from './Dialog.svelte';
-  import Logo from './Logo.svelte';
+  import Dialog from '$lib/components/Dialog.svelte';
+  import Logo from '$lib/components/Logo.svelte';
 
   let dialog = $state();
 </script>
@@ -24,11 +24,12 @@
       American English dictionary from <a href="http://wordlist.aspell.net/">SCOWL and Friends</a>.
       Icons from <a href="https://lucide.dev">Lucide</a>.
       Color palette from <a href="https://github.com/fchristant/colar">Colar</a>.
+      Repository on <a href="https://github.com/lcpdecastro/countle">GitHub</a>.
     </p>
   </svelte:fragment>
 </Dialog>
 
-<button on:click={ dialog.open }>
+<button onclick={ dialog.open }>
   <h1>COUNTLE</h1>
 </button>
 

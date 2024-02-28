@@ -1,4 +1,4 @@
-import dictionary from "./dictionary.js";
+import dictionary from "./en_US.js";
 
 function* helper (letters, max, curr = "") {
   if (curr.length === max) {
@@ -12,7 +12,7 @@ function* helper (letters, max, curr = "") {
 function solve (letters) {
   let out = { longest: null, words: [] };
 
-  for (let i = 9; i > 2; i--) {
+  for (let i = letters.reduce((p, c) => p += c.length, 0); i > 2; i--) {
     let perms = helper(letters, i);
 
     while (true) {
@@ -30,7 +30,7 @@ function solve (letters) {
 
   out.words.sort();
 
-  return out;
+  return { letters, ...out };
 }
 
 export default solve;

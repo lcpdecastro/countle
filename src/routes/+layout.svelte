@@ -13,16 +13,19 @@
 <svelte:head>
   <title>COUNTLE</title>
   <link rel="icon" href={ `/icon${$page.url.pathname.replaceAll('/', '-')}.png` } />
-  <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#fab005' : '#4c6ef5' }>
+  <meta name="theme-color" content={ $page.url.pathname.includes('daily') ? '#fab005' : $page.url.pathname.includes('arcade') ? '#be4bdb' : '#4c6ef5' }>
 </svelte:head>
 
-<div class="wrapper" style:display="contents" class:daily={ $page.url.pathname.includes('daily') }>
+<div class="wrapper" style:display="contents"
+  class:daily={ $page.url.pathname.includes('daily') }
+  class:arcade={ $page.url.pathname.includes('arcade') }
+>
   <header>
     <div>
       <About />
       <span class="page-name">
         <span class="a">{ $page.url.pathname.split?.('/').at(-1).toUpperCase() }</span>
-        <span class="b">{ $page.url.pathname.includes('daily') ? dayjs().format('YYYY.MM.DD') : 'INFINITE' }</span>
+        <span class="b">{ $page.url.pathname.includes('daily') ? dayjs().format('YYYY.MM.DD') : $page.url.pathname.includes('arcade') ? 'ARCADE' : 'CLASSIC' }</span>
       </span>
       <Instructions />
       <Menu />
@@ -43,6 +46,11 @@
   .wrapper.daily {
     --theme-color: var(--colar-yellow-6);
     --theme-color-light: var(--colar-yellow-0);
+  }
+  
+  .wrapper.arcade {
+    --theme-color: var(--colar-purple-6);
+    --theme-color-light: var(--colar-purple-0);
   }
 
   header {

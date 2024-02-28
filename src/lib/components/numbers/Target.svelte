@@ -17,6 +17,7 @@
   .wrapper {
     display: grid;
     align-self: center;
+    grid-area: 1 / 2 / 2 / 3;
   }
 
   .main {
