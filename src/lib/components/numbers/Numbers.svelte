@@ -32,32 +32,49 @@
     }
   }
 
-  let smallBin = $state(shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]));
-  let largeBin = $state(shuffleList([25, 50, 75, 100]));
+  let smallBin = $state();
+  let largeBin = $state();
 
   let timer = $state();
-  let running = $state(false);
-  let done = $state(false);
+  let running = $state();
+  let done = $state();
 
-  let numbers = $state([]);
+  let numbers = $state();
   let target = $state();
-  let steps = $state([]);
+  let steps = $state();
 
   let solutions = $state();
   let sampleSolution = $state();
 
-  let worker = $state();
+  function resetStates () {
+    smallBin = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
+    largeBin = shuffleList([25, 50, 75, 100]);
+
+    running = false;
+    done = false;
+
+    numbers = [];
+    target = undefined;
+    steps = [];
+
+    solutions = undefined;
+    sampleSolution = undefined;
+  }
+
+  resetStates();
+
+  let solver = $state();
 
   async function solve () {
     const currNumbers = unstate(numbers).map(x => x.value);
     const currTarget = unstate(target);
 
-    worker.postMessage({ numbers: currNumbers, target: currTarget });
+    solver.postMessage({ numbers: currNumbers, target: currTarget });
 
     solutions = await new Promise(resolve => {
       function handler (e) {
         if (currTarget !== target || currNumbers.some((_, i, a) => a[i] !== numbers[i].value)) {
-          worker.removeEventListener('message', handler);
+          solver.removeEventListener('message', handler);
           return;
         }
 
@@ -68,23 +85,20 @@
             diff: data.diff
           });
           
-          worker.removeEventListener('message', handler);
+          solver.removeEventListener('message', handler);
         }
       }
 
-      worker.addEventListener('message', handler);
+      solver.addEventListener('message', handler);
     });
   }
 
   function pickNumber (large = false) {
-    if (large) numbers.push(new N(largeBin.pop()));
-    else numbers.push(new N(smallBin.pop()));
+    return (large ? largeBin : smallBin).pop();
   }
   
   function pickTarget () {
-    target = Math.floor(Math.random() * 899) + 101;
-    solve();
-    startGame();
+    return Math.floor(Math.random() * 899) + 101;
   }
 
   function selectNumber (x) {
@@ -153,24 +167,14 @@
   }
 
   function resetGame () {
-    smallBin = shuffleList([1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10]);
-    largeBin = shuffleList([25, 50, 75, 100]);
-
-    numbers = [];
-    target = undefined;
-    steps = [];
-
-    solutions = undefined;
-    sampleSolution = undefined;
+    resetStates();
+    timer.reset();
 
     if (gameMode === 'arcade') {
       arcadeDifficulty = undefined;
       score.reset();
       skip.reset();
     }
-
-    done = false;
-    timer.reset();
   }
 
   function showSolution () {
@@ -291,7 +295,7 @@
 
   function startArcade (diff) {
     arcadeDifficulty = diff;
-    while (numbers.length < 6) pickNumber(Math.random() < 0.3 && largeBin.length > 0);
+    while (numbers.length < 6) numbers.push(new N(pickNumber(Math.random() < 0.3 && largeBin.length > 0)));
 
     tick().then(() => {
       pickArcadeTarget();
@@ -331,9 +335,13 @@
   function getDaily () {
     const l = Math.floor(Math.random() * 5);
     const s = shuffleList(Array(l).fill(true).concat(Array(6 - l).fill(false)));
-    for (let x of s) pickNumber(x);
+    for (let x of s) numbers.push(new N(pickNumber(x)));
 
-    tick().then(pickTarget);
+    tick().then(() => {
+      target = pickTarget();
+      solve();
+      startGame();
+    });
   }
 
   function saveDaily () {
@@ -390,7 +398,7 @@
 
   onMount(() => {
     if (gameMode !== 'daily' || (gameMode === 'daily' && !$dailyStore?.['numbers']?.['solutions'])) {
-      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+      solver = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
     }
 
     if (gameMode === 'daily' && $dailyStore['date'] === dayjs().format('YYYY-MM-DD') && 'numbers' in $dailyStore) {
@@ -402,6 +410,7 @@
 
   onDestroy(() => {
     if (gameMode === 'daily') seed.resetGlobal();
+    solver?.terminate?.();
   });
 </script>
 
@@ -478,16 +487,22 @@
   { :else if gameMode === 'classic' }
     { #if numbers.length < 6 }
       <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-        <button class="text-btn" onclick={ () => pickNumber() }>
+        <button class="text-btn" onclick={ () => numbers.push(new N(pickNumber())) }>
           SMALL
         </button>
-        <button class="text-btn" disabled={ largeBin.length === 0 } onclick={ () => pickNumber(true) }>
+        <button class="text-btn" disabled={ largeBin.length === 0 } onclick={ () => numbers.push(new N(pickNumber(true))) }>
           LARGE
         </button>
       </div>
     { :else if target === undefined }
       <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-        <button class="text-btn" onclick={ pickTarget }>
+        <button class="text-btn"
+          onclick={ () => {
+            target = pickTarget();
+            solve();
+            startGame();
+          } }
+        >
           GENERATE TARGET
         </button>
       </div>

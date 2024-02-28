@@ -63,19 +63,19 @@
 
   resetStates();
 
-  let worker = $state();
+  let solver = $state();
 
   async function solve () {
     solutions = undefined;
 
     const currLetters = unstate(letters).map(x => x.value);
 
-    worker.postMessage({ letters: currLetters });
+    solver.postMessage({ letters: currLetters });
 
     solutions = await new Promise(resolve => {
       function handler (e) {
         if (currLetters.some((_, i, a) => a[i] !== letters[i].value)) {
-          worker.removeEventListener('message', handler);
+          solver.removeEventListener('message', handler);
           return;
         }
 
@@ -86,22 +86,16 @@
             words: data.words
           });
           
-          worker.removeEventListener('message', handler);
+          solver.removeEventListener('message', handler);
         }
       }
 
-      worker.addEventListener('message', handler);
+      solver.addEventListener('message', handler);
     });
   }
 
   function pickLetter (vowel = false) {
-    if (vowel) letters.push(new L(vowels.pop()));
-    else letters.push(new L(consonants.pop()));
-
-    if (letters.length === 9) {
-      solve();
-      startGame();
-    }
+    return (vowel ? vowels : consonants).pop();
   }
 
   function selectLetter (x) {
@@ -213,7 +207,9 @@
   function getDaily () {
     const v = Math.floor(Math.random() * 3) + 3;
     const s = shuffleList(Array(v).fill(true).concat(Array(9 - v).fill(false)));
-    for (let x of s) pickLetter(x);
+    for (let x of s) letters.push(new L(pickLetter(x)));
+    solve();
+    startGame();
   }
 
   function saveDaily () {
@@ -236,7 +232,7 @@
 
   onMount(() => {
     if (gameMode !== 'daily' || (gameMode === 'daily' && !$dailyStore?.['letters']?.['solutions'])) {
-      worker = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+      solver = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
     }
 
     if (gameMode === 'daily' && $dailyStore['date'] === dayjs().format('YYYY-MM-DD') && 'letters' in $dailyStore) {
@@ -248,6 +244,7 @@
 
   onDestroy(() => {
     if (gameMode === 'daily') seed.resetGlobal();
+    solver?.terminate?.();
   });
 </script>
 
@@ -310,10 +307,26 @@
   { :else if gameMode === 'classic' }
     { #if letters.length < 9 }
       <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-        <button class="text-btn" disabled={ letters.filter(x => 'AEIOU'.includes(x.value)).length === 5 } onclick={ () => pickLetter(true) }>
+        <button class="text-btn" disabled={ letters.filter(x => 'AEIOU'.includes(x.value)).length === 5 }
+          onclick={ () => {
+            letters.push(new L(pickLetter(true)));
+            if (letters.length === 9) {
+              solve();
+              startGame();
+            }
+          } }
+        >
           VOWEL
         </button>
-        <button class="text-btn" disabled={ letters.filter(x => !'AEIOU'.includes(x.value)).length === 6 } onclick={ () => pickLetter() }>
+        <button class="text-btn" disabled={ letters.filter(x => !'AEIOU'.includes(x.value)).length === 6 }
+          onclick={ () => {
+          letters.push(new L(pickLetter()));
+          if (letters.length === 9) {
+            solve();
+            startGame();
+          }
+        } }
+        >
           CONSONANT
         </button>
       </div>
