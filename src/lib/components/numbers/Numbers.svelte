@@ -149,7 +149,7 @@
 
   function startGame () {
     running = true;
-    timer.start();
+    // timer.start();
   }
 
   function resetGame () {
@@ -200,44 +200,39 @@
   $effect(() => {
     if (solved) {
       for (let o in validOps) validOps[o] = false;
-      return;
-    }
-
-    const lastStep = steps.at(-1);
-    const allNumbers = numbers.concat(steps.filter(x => x.c).map(x => x.c)).filter(x => !x.used);
-
-    if (!lastStep || steps?.[5]?.c) {
-      for (let o in validOps) validOps[o] = false;
-      for (let n of allNumbers) n.valid = true;
-      return;
-    }
-
-    if (lastStep.c) {
-      for (let n of allNumbers) n.valid = true;
-    }
-    
-    if (!lastStep.o) {
-      lastStep.c = null;
-      for (let n of allNumbers) n.valid = true;
-
-      if (lastStep.a && lastStep.b) {
-        for (let o in validOps) validOps[o] = combine(lastStep.a, lastStep.b, o) !== null;
-      } else {
-        for (let o in validOps) validOps[o] = allNumbers.some(n => combine(lastStep.a ?? n, lastStep.b ?? n, o) !== null);
-      }
+      for (let n of numbers) n.valid = true;
     }
     else {
-      if (!lastStep.c) {
+      const lastStep = steps.at(-1);
+      if (!lastStep) {
         for (let o in validOps) validOps[o] = false;
+        return;
       }
-      
-      if (lastStep.a && lastStep.b && !lastStep.c) {
-        lastStep.c = combine(lastStep.a, lastStep.b, lastStep.o);
-        for (let o in validOps) validOps[o] = steps.length === 5 ? false : allNumbers.some(n => combine(lastStep.c, n, o) !== null);
+
+      const allNumbers = numbers.concat(steps.filter(x => x.c).map(x => x.c)).filter(x => !x.used);
+
+      if (!lastStep.a || !lastStep.b) {
+        if (lastStep.c) lastStep.c = null;
+
+        if (!lastStep.o) {
+          for (let o in validOps) validOps[o] = allNumbers.some(n => combine(lastStep.a ?? n, lastStep.b ?? n, o) !== null);
+          for (let n of allNumbers) n.valid = true;
+        }
+        else {
+          for (let o in validOps) validOps[o] = false;
+          for (let n of allNumbers) n.valid = combine(lastStep.a ?? n, lastStep.b ?? n, lastStep.o) !== null;
+        }
       }
-      else if (!lastStep.a || !lastStep.b) {
-        lastStep.c = null;
-        for (let n of allNumbers) n.valid = combine(lastStep.a ?? n, lastStep.b ?? n, lastStep.o) !== null;
+      else {
+        if (!lastStep.o) {
+          lastStep.c = null;
+          for (let o in validOps) validOps[o] = combine(lastStep.a, lastStep.b, o) !== null;
+        }
+        else {
+          if (!lastStep.c) lastStep.c = combine(lastStep.a, lastStep.b, lastStep.o);
+          for (let o in validOps) validOps[o] = allNumbers.some(n => lastStep.c !== n && combine(lastStep.c, n, o) !== null);
+          for (let n of allNumbers) n.valid = ['\u002b', '\u2212', '\u00d7', '\u00f7'].some(o => combine(lastStep.c, n, o) !== null);
+        }
       }
     }
   });

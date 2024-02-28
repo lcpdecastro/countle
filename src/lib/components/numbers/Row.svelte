@@ -12,27 +12,17 @@
 </script>
 
 <div class="wrapper" in:flip={ { duration: 300, easing: cssEaseIn } } out:flip={ { duration: 300, easing: cssEaseOut, from: 0, to: 180 } }>
-  <OutlineSquare value={ data?.a?.value }
-    onclick={ () => onRemoveNumber('a') }
-  />
+  <OutlineSquare data={ data?.a } onclick={ () => onRemoveNumber('a') } />
 
-  <Operation value={ data?.o }
-    onclick={ onRemoveOperation }
-  />
+  <Operation value={ data?.o } onclick={ onRemoveOperation } />
 
-  <OutlineSquare value={ data?.b?.value }
-    onclick={ () => onRemoveNumber('b') }
-  />
+  <OutlineSquare data={ data?.b } onclick={ () => onRemoveNumber('b') } />
 
   <Operation value="=" />
 
-  <Square data={ data?.c } { solved }
-    onclick={ () => onSelectNumber(data.c) }
-  />
+  <Square data={ data?.c } { solved } onclick={ () => onSelectNumber(data.c) } />
   
-  <button
-    onclick={ onRemoveRow }
-  >
+  <button onclick={ onRemoveRow } >
     <X size="100%" strokeWidth="0.075rem" color="var(--colar-red-6)" />
   </button>
 </div>

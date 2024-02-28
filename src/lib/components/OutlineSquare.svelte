@@ -1,8 +1,10 @@
 <script>
   import { scale } from 'svelte/transition';
-  import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
+  import { cssEaseIn } from '$lib/js/cssEase.js';
 
-  let { value, used = false, size = "3rem", onclick } = $props();
+  let { data, size = "3rem", onclick } = $props();
+
+  let value = $derived(data?.value);
 
   let canvas = $state();
   let span = $state();
@@ -16,19 +18,18 @@
     const m = ctx.measureText(value);
     const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
 
-    const containerWidth = span.offsetWidth;
+    const containerWidth = parseFloat(getComputedStyle(span).width);
 
     textScale = Math.min(1, containerWidth / textWidth);
   });
-
 </script>
 
 <canvas bind:this={ canvas } />
 
-<button disabled={ used } style:--size={ size } { onclick }>
-  { #key value }
+<button style:--size={ size } { onclick }>
+  { #key data }
     <div class="square">
-      <div class="text" in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseOut } } bind:this={ span } style:--text-scale={ textScale }>
+      <div class="text" in:scale={ { duration: 150, easing: cssEaseIn } } out:scale={ { duration: 150, easing: cssEaseIn } } bind:this={ span } style:--text-scale={ textScale }>
         { value }
       </div>
     </div>

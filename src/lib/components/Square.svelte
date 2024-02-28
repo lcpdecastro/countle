@@ -2,7 +2,7 @@
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
 
-  let { data, solved, size = "3rem", onclick } = $props();
+  let { data, size = "3rem", solved, onclick } = $props();
 
   let value = $derived(data?.value);
   let used = $derived(data?.used);
@@ -22,7 +22,7 @@
     const m = ctx.measureText(value);
     const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
 
-    let containerWidth = span.offsetWidth;
+    let containerWidth = parseFloat(getComputedStyle(span).width);
 
     textScale = Math.min(1, containerWidth / textWidth);
   });
