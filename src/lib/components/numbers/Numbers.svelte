@@ -202,7 +202,7 @@
       for (let o in validOps) validOps[o] = false;
       for (let n of numbers) n.valid = true;
     }
-    else {
+    else if (running) {
       const lastStep = steps.at(-1);
       if (!lastStep) {
         for (let o in validOps) validOps[o] = false;

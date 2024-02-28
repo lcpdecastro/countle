@@ -4,7 +4,7 @@
   
   import { cssEaseIn } from '$lib/js/cssEase.js';
 
-  let { onTimerDone, onCritical } = $props();
+  let { onTimerDone } = $props();
 
   let store = tweened(30);
   let donePromise = $state();
@@ -26,9 +26,7 @@
     .then(() => donePromise = store.set(0, { duration: $store * 1000 }));
   }
 
-  $effect(() => {
-    donePromise?.then?.(onTimerDone);
-  });
+  $effect(() => donePromise?.then?.(onTimerDone));
 
   onDestroy(reset);
 </script>
