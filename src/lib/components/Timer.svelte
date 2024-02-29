@@ -86,4 +86,10 @@
   .wrapper.yellow span {
     color: var(--colar-yellow-6);
   }
+
+  @media (prefers-color-scheme: dark) {
+    .timer {
+      background: var(--colar-gray-10);
+    }
+  }
 </style>

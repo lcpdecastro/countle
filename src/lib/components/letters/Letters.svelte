@@ -225,7 +225,15 @@
 
     for (let x of gameState.letters) letters.push(new L(x));
     for (let x of gameState.input) selectLetter(letters[x]);
-    solutions = gameState.solutions;
+    
+    if (gameState.solutions) solutions = gameState.solutions;
+    else {
+      solver = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+      solve().then(x => {
+        $dailyStore['letters']['solutions'] = x;
+        solver.terminate();
+      });
+    }
   }
 
   /* === LIFECYCLE === */
@@ -243,7 +251,11 @@
   });
 
   onDestroy(() => {
-    if (gameMode === 'daily') seed.resetGlobal();
+    if (gameMode === 'daily') {
+      seed.resetGlobal();
+      if (running) saveDaily();
+    }
+
     solver?.terminate?.();
   });
 </script>

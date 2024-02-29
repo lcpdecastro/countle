@@ -105,7 +105,6 @@
   .top {
     padding: 1.5rem;
     display: flex;
-    border-bottom: 0.075rem solid var(--colar-gray-4);
   }
 
   .top h1 {
@@ -138,6 +137,8 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    border-top: 0.075rem solid var(--colar-gray-3);
+    border-bottom: 0.075rem solid var(--colar-gray-3);
     line-height: 1.5;
     overflow: auto;
   }
@@ -145,10 +146,21 @@
   .bottom {
     display: flex;
     gap: 1rem;
-    border-top: 0.075rem solid var(--colar-gray-4);
   }
 
   .bottom .text-btn {
     margin-left: auto;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .main {
+      background: var(--colar-gray-11);
+      color: white;
+    }
+
+    .body {
+      border-top: 0.075rem solid var(--colar-gray-9);
+      border-bottom: 0.075rem solid var(--colar-gray-9);
+    }
   }
 </style>

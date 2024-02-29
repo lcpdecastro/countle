@@ -51,6 +51,12 @@
   }
 
   button:hover {
-    background: var(--colar-red-0);
+    background: var(--colar-red-1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    button:hover {
+      background: var(--colar-red-12);
+    }
   }
 </style>
