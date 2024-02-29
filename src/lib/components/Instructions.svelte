@@ -122,7 +122,7 @@
       <p>
         Once your time is up, the game will allow you to look through the solutions that it has computed, as well as how many of them there are.
       </p>
-      { #if !gameMode === 'arcade' }
+      { #if gameMode !== 'arcade' }
         <p>
           Because the numbers you get are completely random, some targets are impossible to reach exactly with some sets of numbers.
           If the game can&CloseCurlyQuote;t find an exact solution, don&CloseCurlyQuote;t worry: there really isn&CloseCurlyQuote;t one!
@@ -267,5 +267,25 @@
 
   .note-red .note-title {
     border-bottom: 0.075rem solid var(--colar-red-8);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .note-red {
+      background: var(--colar-red-12);
+      color: var(--colar-red-3);
+    }
+
+    .note-yellow {
+      background: var(--colar-yellow-12);
+      color: var(--colar-yellow-3);
+    }
+
+    .note-yellow .note-title {
+      border-bottom: 0.075rem solid var(--colar-yellow-5);
+    }
+
+    .note-red .note-title {
+      border-bottom: 0.075rem solid var(--colar-red-5);
+    }
   }
 </style>

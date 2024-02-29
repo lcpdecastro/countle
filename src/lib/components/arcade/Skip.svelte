@@ -72,4 +72,10 @@
   .inner {
     background: var(--theme-color);
   }
+
+  @media (prefers-color-scheme: dark) {
+    .countdown {
+      background: var(--colar-gray-10);
+    }
+  }
 </style>

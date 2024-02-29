@@ -210,6 +210,7 @@
       const lastStep = steps.at(-1);
       if (!lastStep) {
         for (let o in validOps) validOps[o] = false;
+        for (let n of numbers) n.valid = true;
         return;
       }
 
@@ -391,7 +392,13 @@
     }
 
     if (gameState.solutions) solutions = gameState.solutions;
-    else solve();
+    else {
+      solver = new Worker(new URL('$lib/js/worker.js', import.meta.url), { type: 'module' });
+      solve().then(x => {
+        $dailyStore['numbers']['solutions'] = x;
+        solver.terminate();
+      });
+    }
   }
 
   /* === LIFECYCLE === */
@@ -409,7 +416,11 @@
   });
 
   onDestroy(() => {
-    if (gameMode === 'daily') seed.resetGlobal();
+    if (gameMode === 'daily') {
+      seed.resetGlobal();
+      if (running) saveDaily();
+    }
+
     solver?.terminate?.();
   });
 </script>

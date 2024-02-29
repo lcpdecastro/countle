@@ -53,6 +53,20 @@
     --theme-color-light: var(--colar-purple-0);
   }
 
+  @media (prefers-color-scheme: dark) {
+    .wrapper {
+      --theme-color-light: var(--colar-indigo-12);
+    }
+
+    .wrapper.daily {
+      --theme-color-light: var(--colar-yellow-12);
+    }
+
+    .wrapper.arcade {
+      --theme-color-light: var(--colar-purple-12);
+    }
+  }
+
   header {
     width: 100%;
     height: max-content;

@@ -30,7 +30,7 @@
 
 <div class="wrapper">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" class:frozen>
-    <circle cx="50" cy="50" r="50" fill="var(--colar-gray-3)" />
+    <circle cx="50" cy="50" r="50" class="back" />
     <circle cx="50" cy="50" r="25" stroke="var(--theme-color)" stroke-width="50" stroke-dasharray="{ Math.PI * 50 * ($countdown / 5) } { Math.PI * 50 * (1 - ($countdown / 5)) }"/>
   </svg>
 
@@ -59,32 +59,20 @@
     filter: grayscale(1);
     opacity: 0.5;
   }
+  
+  .back {
+    fill: var(--colar-gray-3);
+  }
 
   button {
     width: min-content;
     align-self: center;
     justify-self: center;
-    color: var(--theme-color);
   }
 
-  .countdown, .inner {
-    height: 0.25rem;
-    border-radius: 0.25rem;
-    background: var(--colar-gray-3);
-  }
-
-  .countdown {
-    overflow: hidden;
-    transition-property: filter, opacity;
-    transition-duration: 0.15s;
-  }
-
-  .countdown.frozen {
-    filter: grayscale(1);
-    opacity: 0.5;
-  }
-
-  .inner {
-    background: var(--theme-color);
+  @media (prefers-color-scheme: dark) {
+    .back {
+      fill: var(--colar-gray-10);
+    }
   }
 </style>
