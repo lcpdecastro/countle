@@ -13,10 +13,10 @@
   </div>
 
   <button class="icon-btn backspace" disabled={ !active } onclick={ onRemoveLetter }>
-    <Backspace strokeWidth="0.075rem" size="100%" />
+    <Backspace strokeWidth="var(--border-width)" size="100%" />
   </button>
   <button class="icon-btn delete" disabled={ !active } onclick={ onClearWord }>
-    <Trash strokeWidth="0.075rem" size="100%" />
+    <Trash strokeWidth="var(--border-width)" size="100%" />
   </button>
 </div>
 
@@ -26,7 +26,7 @@
     padding: 0.5rem;
     display: flex;
     gap: 1rem;
-    border-bottom: 0.075rem solid var(--theme-color);
+    border-bottom: var(--border-width) solid var(--theme-color);
     transition-property: border-bottom-color;
     transition-duration: 0.15s;
   }
@@ -59,5 +59,19 @@
 
   .delete {
     color: var(--colar-red-6);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .wrapper.invalid {
+      border-bottom-color: var(--colar-red-5);
+    }
+
+    .wrapper.invalid .word {
+      color: var(--colar-red-5);
+    }
+
+    .delete {
+      color: var(--colar-red-5);
+    }
   }
 </style>

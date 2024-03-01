@@ -30,7 +30,7 @@
       </h1>
 
       <button class="icon-btn close" onclick={ close }>
-        <X size="100%" strokeWidth="0.075rem" color="currentColor" />
+        <X size="100%" strokeWidth="var(--border-width)" color="currentColor" />
       </button>
     </div>
 
@@ -125,7 +125,7 @@
   }
 
   .close:focus {
-    outline: currentColor solid 0.075rem;
+    outline: currentColor solid var(--border-width);
   }
 
   .body, .bottom {
@@ -137,8 +137,8 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    border-top: 0.075rem solid var(--colar-gray-3);
-    border-bottom: 0.075rem solid var(--colar-gray-3);
+    border-top: var(--border-width) solid var(--colar-gray-3);
+    border-bottom: var(--border-width) solid var(--colar-gray-3);
     line-height: 1.5;
     overflow: auto;
   }
@@ -155,12 +155,12 @@
   @media (prefers-color-scheme: dark) {
     .main {
       background: var(--colar-gray-11);
-      color: white;
+      color: var(--colar-gray-2);
     }
 
     .body {
-      border-top: 0.075rem solid var(--colar-gray-9);
-      border-bottom: 0.075rem solid var(--colar-gray-9);
+      border-top: var(--border-width) solid var(--colar-gray-9);
+      border-bottom: var(--border-width) solid var(--colar-gray-9);
     }
   }
 </style>

@@ -106,4 +106,18 @@
     font-weight: bold;
     color: white;
   }
+
+  @media (prefers-color-scheme: dark) {
+    .text {
+      color: var(--colar-gray-12);
+    }
+
+    .square.invalid {
+      background: var(--colar-red-5);
+    }
+
+    .square.solved {
+      background: var(--colar-green-4);
+    }
+  }
 </style>

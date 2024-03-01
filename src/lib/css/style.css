@@ -4,6 +4,8 @@
   font-size: min(1rem, 4vw);
   color: var(--colar-gray-11);
   touch-action: manipulation;
+
+  --border-width: 0.1rem;
 }
 
 * {
@@ -43,7 +45,7 @@ a[href] {
 
 button.text-btn {
   padding: 0.4rem 0.6rem;
-  border: 0.075rem solid currentColor;
+  border: var(--border-width) solid currentColor;
   border-radius: 0.6rem;
   color: var(--theme-color);
   font-weight: bold;
@@ -56,7 +58,7 @@ button.text-btn:hover, button.text-btn:focus {
 }
 
 button.text-btn:focus {
-  outline: currentColor solid 0.075rem;
+  outline: currentColor solid var(--border-width);
   outline-offset: 0.15rem;
 }
 
@@ -76,7 +78,7 @@ button.icon-btn {
 }
 
 button.icon-btn:focus {
-  outline: currentColor solid 0.075rem;
+  outline: currentColor solid var(--border-width);
   outline-offset: 0.225rem;
 }
 
@@ -88,6 +90,9 @@ button.icon-btn:disabled {
 @media (prefers-color-scheme: dark) {
   :root {
     background: var(--colar-gray-12);
-    color: white;
+    color: var(--colar-gray-1);
+    font-weight: 450;
+
+    --border-width: 0.15rem;
   }
 }

@@ -23,7 +23,7 @@
   <Square data={ data?.c } { solved } onclick={ () => onSelectNumber(data.c) } />
   
   <button onclick={ onRemoveRow } >
-    <X size="100%" strokeWidth="0.075rem" color="var(--colar-red-6)" />
+    <X size="100%" strokeWidth="var(--border-width)" />
   </button>
 </div>
 
@@ -44,8 +44,9 @@
     align-items: center;
     justify-items: center;
     align-self: center;
-    border: 0.075rem solid var(--colar-red-6);
+    border: var(--border-width) solid var(--colar-red-6);
     border-radius: 50%;
+    color: var(--colar-red-6);
     transition-property: background;
     transition-duration: 0.15s;
   }
@@ -55,6 +56,11 @@
   }
 
   @media (prefers-color-scheme: dark) {
+    button {
+      border-color: var(--colar-red-5);
+      color: var(--colar-red-5);
+    }
+
     button:hover {
       background: var(--colar-red-12);
     }

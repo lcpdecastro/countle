@@ -65,7 +65,7 @@
     align-items: center;
     justify-items: center;
     grid-area: 1 / 1 / 2 / 2;
-    border: 0.075rem solid var(--theme-color);
+    border: var(--border-width) solid var(--theme-color);
     border-radius: 30%;
     transition-property: background;
     transition-duration: 0.15s;

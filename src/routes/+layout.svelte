@@ -53,20 +53,6 @@
     --theme-color-light: var(--colar-purple-0);
   }
 
-  @media (prefers-color-scheme: dark) {
-    .wrapper {
-      --theme-color-light: var(--colar-indigo-12);
-    }
-
-    .wrapper.daily {
-      --theme-color-light: var(--colar-yellow-12);
-    }
-
-    .wrapper.arcade {
-      --theme-color-light: var(--colar-purple-12);
-    }
-  }
-
   header {
     width: 100%;
     height: max-content;
@@ -117,5 +103,27 @@
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .wrapper {
+      --theme-color: var(--colar-indigo-4);
+      --theme-color-light: var(--colar-indigo-12);
+    }
+
+    .wrapper.daily {
+      --theme-color: var(--colar-yellow-4);
+      --theme-color-light: var(--colar-yellow-12);
+    }
+
+    .wrapper.arcade {
+      --theme-color: var(--colar-purple-4);
+      --theme-color-light: var(--colar-purple-12);
+    }
+
+    header {
+      background: var(--colar-gray-11);
+      color: unset;
+    }
   }
 </style>

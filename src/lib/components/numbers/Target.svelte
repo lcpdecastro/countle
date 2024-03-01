@@ -36,4 +36,11 @@
     color: white;
     backface-visibility: hidden;
   }
+
+  @media (prefers-color-scheme: dark) {
+    .main {
+      color: var(--colar-gray-12);
+      font-weight: 850;
+    }
+  }
 </style>

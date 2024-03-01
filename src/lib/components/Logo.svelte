@@ -1,10 +1,11 @@
 <script>
   import { page } from "$app/stores";
+  import { onMount } from "svelte";
 
   let canvas = $state();
   let color = $state();
 
-  $effect(() => {
+  function draw () {
     color = getComputedStyle(canvas).getPropertyValue('--theme-color');
 
     new FontFace('Work Sans', 'url(https://fonts.gstatic.com/s/worksans/v19/QGYsz_wNahGAdqQ43Rh_fKDp.woff2)').load().then(() => {
@@ -41,9 +42,16 @@
       ctx.fillText('OUNTLE', 105, 50 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2);
 
       const n = ctx.measureText('C');
+      ctx.globalCompositeOperation = 'xor';
       ctx.fillStyle = 'white';
       ctx.fillText('C', 50 - (n.actualBoundingBoxRight - n.actualBoundingBoxLeft) / 2, 50 + (n.actualBoundingBoxAscent - n.actualBoundingBoxDescent) / 2);
     });
+  };
+
+  $effect(draw);
+
+  onMount(() => {
+    matchMedia('(prefers-color-scheme: dark)').onchange = draw;
   });
 </script>
 

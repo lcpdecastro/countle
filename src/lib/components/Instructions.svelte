@@ -243,13 +243,13 @@
   }
 
   .note-red {
-    border: 0.075rem solid var(--colar-red-8);
+    border: var(--border-width) solid var(--colar-red-8);
     background: var(--colar-red-0);
     color: var(--colar-red-10);
   }
 
   .note-yellow {
-    border: 0.075rem solid var(--colar-yellow-8);
+    border: var(--border-width) solid var(--colar-yellow-8);
     background: var(--colar-yellow-0);
     color: var(--colar-yellow-10);
   }
@@ -262,30 +262,30 @@
   }
 
   .note-yellow .note-title {
-    border-bottom: 0.075rem solid var(--colar-yellow-8);
+    border-bottom: var(--border-width) solid var(--colar-yellow-8);
   }
 
   .note-red .note-title {
-    border-bottom: 0.075rem solid var(--colar-red-8);
+    border-bottom: var(--border-width) solid var(--colar-red-8);
   }
 
   @media (prefers-color-scheme: dark) {
     .note-red {
       background: var(--colar-red-12);
-      color: var(--colar-red-3);
+      color: var(--colar-red-2);
     }
 
     .note-yellow {
       background: var(--colar-yellow-12);
-      color: var(--colar-yellow-3);
+      color: var(--colar-yellow-2);
     }
 
     .note-yellow .note-title {
-      border-bottom: 0.075rem solid var(--colar-yellow-5);
+      border-bottom-color: var(--colar-yellow-5);
     }
 
     .note-red .note-title {
-      border-bottom: 0.075rem solid var(--colar-red-5);
+      border-bottom-color: var(--colar-red-5);
     }
   }
 </style>

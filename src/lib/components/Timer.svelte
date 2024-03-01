@@ -91,5 +91,21 @@
     .timer {
       background: var(--colar-gray-10);
     }
+
+    .wrapper.red .inner {
+      background: var(--colar-red-5);
+    }
+
+    .wrapper.yellow .inner {
+      background: var(--colar-yellow-4);
+    }
+
+    .wrapper.red span {
+      color: var(--colar-red-5);
+    }
+
+    .wrapper.yellow span {
+      color: var(--colar-yellow-4);
+    }
   }
 </style>

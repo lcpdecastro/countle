@@ -18,7 +18,7 @@
 <dialog bind:this={ menu }>
   <div class="back" onclick={ () => menu.close() } />
 
-  <nav class="main">
+  <nav>
     <h2>CLASSIC</h2>
     <a class:current={ $page.url.pathname === '/classic/letters' } href="/classic/letters">LETTERS</a>
     <a class:current={ $page.url.pathname === '/classic/numbers' } href="/classic/numbers">NUMBERS</a>
@@ -70,7 +70,7 @@
     display: none;
   }
 
-  .back, .main {
+  .back, nav {
     grid-area: 1 / 1 / 2 / 2;
   }
 
@@ -86,7 +86,7 @@
     opacity: 1;
   }
   
-  .main {
+  nav {
     min-width: max-content;
     width: 50vw;
     max-width: 20rem;
@@ -103,15 +103,15 @@
     transition: transform 0.15s;
   }
 
-  dialog[open] .main {
+  dialog[open] nav {
     transform: none;
   }
 
-  .main h2 {
+  nav h2 {
     margin: 0;
   }
 
-  .main a {
+  nav a {
     padding: 0.3rem 0.5rem;
     border-radius: 0.5rem;
     color: white;
@@ -120,17 +120,17 @@
     transition-duration: 0.15s;
   }
 
-  .main a:hover, .main a.current {
+  nav a:hover, nav a.current {
     color: var(--theme-color);
     background: white;
   }
 
-  .main a:focus {
-    outline: white solid 0.075rem;
+  nav a:focus {
+    outline: white solid var(--border-width);
     outline-offset: 0.15rem;
   }
 
-  .main a.current {
+  nav a.current {
     font-weight: bold;
   }
 
@@ -138,10 +138,29 @@
     width: 100%;
     height: 0;
     border: none;
-    border-top: 0.075rem solid white;
+    border-top: var(--border-width) solid white;
   }
 
   .icon-btn {
     align-self: center;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .main {
+      color: var(--colar-gray-2);
+    }
+
+    nav {
+      background: var(--colar-gray-11);
+      color: var(--colar-gray-2);
+    }
+
+    nav a:hover, nav a.current {
+      color: var(--colar-gray-11);
+    }
+
+    nav a.current {
+      background: var(--theme-color);
+    }
   }
 </style>

@@ -53,7 +53,7 @@
     justify-items: center;
     grid-area: 1 / 1 / 2 / 2;
     background: none;
-    border: 0.075rem solid var(--theme-color);
+    border: var(--border-width) solid var(--theme-color);
     border-radius: 30%;
     backface-visibility: hidden;
     transition: background 0.15s;

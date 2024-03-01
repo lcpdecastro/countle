@@ -291,7 +291,7 @@
         <Score bind:this={ score } />
       </div>
 
-      <button class="text-btn submit" disabled={ inputWord.length === 0 || invalid } onclick={ enterWord }>
+      <button class="text-btn submit" disabled={ inputWord.length === 0 || invalid || !running } onclick={ enterWord }>
         SUBMIT
       </button>
     </div>
