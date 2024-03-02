@@ -184,7 +184,7 @@
       if (!letters[i]) letters[i] = new L(pickArcadeLetter());
     }
 
-    score.add(inputWord.length * 1000);
+    score.add(inputWord.length);
     timer.add(letters.every(x => x.used) ? 30 : inputWord.length);
     skip.refill();
     

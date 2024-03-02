@@ -180,6 +180,7 @@
         <p>
           Once the game starts, the timer will start counting down from <b>30 seconds</b>.
           For every word submitted, the timer will be increased by <b>1 second</b> for every letter in your word.
+          If you use <b>all</b> the tiles on the board, the timer will be <b>fully replenished</b>!
         </p>
         <p>
           Letters used in your solution will be returned to their respective bins and replaced with newly picked letters.
