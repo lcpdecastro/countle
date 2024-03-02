@@ -17,10 +17,10 @@
   let container = $state();
   let containerWidth = $state();
 
-  let textScale = $derived.call(() => {
-    try {
-      if (!containerWidth) throw '';
-
+  let textScale = $state(1);
+  
+  $effect(() => {
+    new FontFace('Work Sans', 'url(https://fonts.gstatic.com/s/worksans/v19/QGYsz_wNahGAdqQ43Rh_fKDp.woff2)').load().then(() => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
@@ -28,9 +28,8 @@
       const m = ctx.measureText(score.toLocaleString());
       const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
       
-      return Math.min(1, containerWidth / textWidth);
-    }
-    catch { return 1; }
+      textScale = Math.min(1, containerWidth / textWidth);
+    });
   });
 
   onMount(() => containerWidth = parseFloat(getComputedStyle(container).width));

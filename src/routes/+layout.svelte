@@ -8,6 +8,8 @@
   import Instructions from '$lib/components/Instructions.svelte';
 
   import '$lib/css/style.css';
+
+  let { children } = $props();
 </script>
 
 <svelte:head>
@@ -33,7 +35,7 @@
   </header>
 
   <main>
-    <slot />
+    { @render children() }
   </main>
 </div>
 

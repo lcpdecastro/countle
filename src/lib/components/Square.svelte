@@ -13,19 +13,21 @@
   let span = $state();
   let containerWidth = $state();
 
-  let textScale = $derived.call(() => {
-    try {
-      if (!containerWidth) throw '';
+  let textScale = $state(1);
 
+  $effect(() => {
+    if (!value) return;
+    
+    new FontFace('Work Sans', 'url(https://fonts.gstatic.com/s/worksans/v19/QGYsz_wNahGAdqQ43Rh_fKDp.woff2)').load().then(() => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-
+      
       ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
       const m = ctx.measureText(value);
       const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
 
-      return Math.min(1, containerWidth / textWidth);
-    } catch { return 1; }
+      textScale = Math.min(1, containerWidth / textWidth);
+    });
   });
 
   onMount(() => containerWidth = parseFloat(getComputedStyle(span).width));
@@ -42,10 +44,6 @@
 </button>
 
 <style>
-  canvas {
-    display: none;
-  }
-
   button {
     padding: 0;
     display: grid;

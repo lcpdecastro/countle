@@ -2,6 +2,8 @@
   import { page } from '$app/stores';
   import X from 'lucide-svelte/icons/x';
 
+  let { title, body } = $props();
+
   let dialog = $state();
 
   export function open () {
@@ -26,7 +28,7 @@
   <div class="main">
     <div class="top">
       <h1>
-        <slot name="title" />
+        { @render title() }
       </h1>
 
       <button class="icon-btn close" onclick={ close }>
@@ -35,7 +37,7 @@
     </div>
 
     <div class="body" bind:this={ dialogBody }>
-      <slot name="body" />
+      { @render body() }
     </div>
 
     <div class="bottom">

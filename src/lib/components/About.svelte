@@ -6,11 +6,11 @@
 </script>
 
 <Dialog bind:this={ dialog }>
-  <svelte:fragment slot="title">
+  { #snippet title() }
     About
-  </svelte:fragment>
+  { /snippet }
 
-  <svelte:fragment slot="body">
+  { #snippet body() }
     <Logo />
 
     <p>
@@ -26,7 +26,7 @@
       Color palette from <a href="https://github.com/fchristant/colar">Colar</a>.
       Repository on <a href="https://github.com/lcpdecastro/countle">GitHub</a>.
     </p>
-  </svelte:fragment>
+  { /snippet }
 </Dialog>
 
 <button onclick={ dialog.open }>

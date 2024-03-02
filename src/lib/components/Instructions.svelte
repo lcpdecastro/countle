@@ -25,11 +25,11 @@
 { /snippet }
 
 <Dialog bind:this={ dialog }>
-  <svelte:fragment slot="title">
+  { #snippet title() }
     Instructions
-  </svelte:fragment>
+  {/snippet}
 
-  <svelte:fragment slot="body">
+  { #snippet body() }
     { #if gameType === 'numbers' }
       { #if gameMode === 'classic' }
         <p>
@@ -215,7 +215,7 @@
         This allows the game to work even without an internet connection.
       </p>
     { /if }
-  </svelte:fragment>
+  { /snippet }
 </Dialog>
 
 <button class="icon-btn" onclick={ () => dialog.open() }>

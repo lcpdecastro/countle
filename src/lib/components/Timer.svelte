@@ -28,7 +28,7 @@
 
   $effect(() => donePromise?.then?.(onTimerDone));
 
-  onDestroy(reset);
+  onDestroy(drain);
 </script>
 
 <div class="wrapper" class:red={ $store <= 5 }>
