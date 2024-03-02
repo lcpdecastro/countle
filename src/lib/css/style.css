@@ -5,7 +5,7 @@
   color: var(--colar-gray-11);
   touch-action: manipulation;
 
-  --border-width: 0.075em;
+  --border-width: 0.075rem;
 }
 
 * {
@@ -93,6 +93,6 @@ button.icon-btn:disabled {
     color: var(--colar-gray-1);
     font-weight: 450;
 
-    --border-width: 0.15rem;
+    --border-width: 0.125rem;
   }
 }
