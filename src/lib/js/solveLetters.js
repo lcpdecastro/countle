@@ -1,4 +1,4 @@
-import dictionary from "./en_US.js";
+import dictionary from "./dictionary.js";
 
 function* helper (letters, max, curr = "") {
   if (curr.length === max) {

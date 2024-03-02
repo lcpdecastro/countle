@@ -13,17 +13,17 @@
   </div>
 
   <button class="icon-btn backspace" disabled={ !active } onclick={ onRemoveLetter }>
-    <Backspace strokeWidth="var(--border-width)" size="100%" />
+    <Backspace strokeWidth="var(--border-width)" size="1.5rem" />
   </button>
   <button class="icon-btn delete" disabled={ !active } onclick={ onClearWord }>
-    <Trash strokeWidth="var(--border-width)" size="100%" />
+    <Trash strokeWidth="var(--border-width)" size="1.5rem" />
   </button>
 </div>
 
 <style>
   .wrapper {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.5rem 0.25rem;
     display: flex;
     gap: 1rem;
     border-bottom: var(--border-width) solid var(--theme-color);
@@ -53,7 +53,7 @@
     align-self: center;
   }
 
-  .backspace, .enter {
+  .backspace {
     color: var(--theme-color);
   }
 

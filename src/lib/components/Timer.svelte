@@ -22,7 +22,7 @@
   }
 
   export function add (amount) {
-    store.set($store + amount - 0.15, { duration: 150, easing: cssEaseIn })
+    store.set(Math.min(30, $store + amount - 0.15), { duration: 150, easing: cssEaseIn })
     .then(() => donePromise = store.set(0, { duration: $store * 1000 }));
   }
 
@@ -31,7 +31,7 @@
   onDestroy(reset);
 </script>
 
-<div class="wrapper" class:red={ $store <= 5 } class:yellow={ $store > 30 }>
+<div class="wrapper" class:red={ $store <= 5 }>
   <div class="timer">
     <div class="inner" style:transform="translateX({ Math.min((1 - $store / 30) * -100, 0) }%)"/>
   </div>
@@ -67,10 +67,6 @@
     background: var(--colar-red-6);
   }
 
-  .wrapper.yellow .inner {
-    background: var(--colar-yellow-6);
-  }
-
   span {
     font-size: 1.5rem;
     font-weight: bold;
@@ -83,10 +79,6 @@
     color: var(--colar-red-6);
   }
 
-  .wrapper.yellow span {
-    color: var(--colar-yellow-6);
-  }
-
   @media (prefers-color-scheme: dark) {
     .timer {
       background: var(--colar-gray-10);
@@ -96,16 +88,8 @@
       background: var(--colar-red-5);
     }
 
-    .wrapper.yellow .inner {
-      background: var(--colar-yellow-4);
-    }
-
     .wrapper.red span {
       color: var(--colar-red-5);
-    }
-
-    .wrapper.yellow span {
-      color: var(--colar-yellow-4);
     }
   }
 </style>

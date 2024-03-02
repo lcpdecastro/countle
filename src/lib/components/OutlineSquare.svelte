@@ -1,4 +1,6 @@
 <script>
+  import { onMount } from 'svelte';
+
   import { scale } from 'svelte/transition';
   import { cssEaseIn } from '$lib/js/cssEase.js';
 
@@ -6,25 +8,26 @@
 
   let value = $derived(data?.value);
 
-  let canvas = $state();
   let span = $state();
+  let containerWidth = $state();
 
-  let textScale = $state(1);
+  let textScale = $derived.call(() => {
+    try {
+      if (!containerWidth) throw '';
 
-  $effect(() => {
-    const ctx = canvas.getContext('2d');
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
 
-    ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
-    const m = ctx.measureText(value);
-    const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
+      ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
+      const m = ctx.measureText(value);
+      const textWidth = m.actualBoundingBoxRight - m.actualBoundingBoxLeft;
 
-    const containerWidth = parseFloat(getComputedStyle(span).width);
-
-    textScale = Math.min(1, containerWidth / textWidth);
+      return Math.min(1, containerWidth / textWidth);
+    } catch { return 1; }
   });
-</script>
 
-<canvas bind:this={ canvas } />
+  onMount(() => containerWidth = parseFloat(getComputedStyle(span).width));
+</script>
 
 <button style:--size={ size } { onclick }>
   { #key data }

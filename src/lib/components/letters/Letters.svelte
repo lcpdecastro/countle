@@ -9,7 +9,7 @@
 
   import flip from '$lib/js/flipTransition.js';
   import { cssEaseIn, cssEaseOut } from '$lib/js/cssEase.js';
-  import dictionary from '$lib/js/en_US.js';
+  import dictionary from '$lib/js/dictionary.js';
   import dailyStore from '$lib/js/daily.js';
 
   import Timer from '$lib/components/Timer.svelte';
@@ -184,7 +184,7 @@
       if (!letters[i]) letters[i] = new L(pickArcadeLetter());
     }
 
-    score.add(inputWord.length);
+    score.add(inputWord.length * 1000);
     timer.add(letters.every(x => x.used) ? 30 : inputWord.length);
     skip.refill();
     
@@ -287,7 +287,7 @@
         <Reroll onclick={ rerollLetters } bind:this={ skip } />
       </div>
 
-      <div style:width="4rem">
+      <div style:width="5rem">
         <Score bind:this={ score } />
       </div>
 
@@ -392,7 +392,7 @@
     grid-template-rows: 100%;
     grid-template-columns: 1fr max-content 1fr;
     align-items: center;
-    gap: 1rem;
+    gap: 0.75rem;
   }
 
   .submit {

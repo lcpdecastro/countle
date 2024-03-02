@@ -5,7 +5,7 @@
   color: var(--colar-gray-11);
   touch-action: manipulation;
 
-  --border-width: 0.1rem;
+  --border-width: 0.075em;
 }
 
 * {
