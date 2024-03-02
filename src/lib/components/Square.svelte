@@ -13,13 +13,13 @@
   let span = $state();
   let containerWidth = $state();
 
+  let canvas = $state();
   let textScale = $state(1);
 
   $effect(() => {
     if (!value) return;
     
     new FontFace('Work Sans', 'url(https://fonts.gstatic.com/s/worksans/v19/QGYsz_wNahGAdqQ43Rh_fKDp.woff2)').load().then(() => {
-      const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
       ctx.font = `bold calc(${size} * 0.5) "Work Sans"`;
@@ -32,6 +32,8 @@
 
   onMount(() => containerWidth = parseFloat(getComputedStyle(span).width));
 </script>
+
+<canvas bind:this={ canvas } style:display="none" />
 
 <button disabled={ used === true } inert={ invalid } style:--size={ size } { onclick }>
   { #key data }

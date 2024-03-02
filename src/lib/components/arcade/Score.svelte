@@ -17,11 +17,11 @@
   let container = $state();
   let containerWidth = $state();
 
+  let canvas = $state();
   let textScale = $state(1);
   
   $effect(() => {
     new FontFace('Work Sans', 'url(https://fonts.gstatic.com/s/worksans/v19/QGYsz_wNahGAdqQ43Rh_fKDp.woff2)').load().then(() => {
-      const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
 
       ctx.font = 'bold 2rem "Work Sans"';
@@ -34,6 +34,8 @@
 
   onMount(() => containerWidth = parseFloat(getComputedStyle(container).width));
 </script>
+
+<canvas bind:this={ canvas } style:display="none" />
 
 <div class="wrapper" bind:this={ container }>
   <div class="score-wrapper">
